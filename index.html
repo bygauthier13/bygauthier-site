@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>byGauthier — Sonic Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100;200;300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Act 1 loader = igloo-clone (gsap 5s, "Hi, I'm Gauthier..."). Act 2 gate = template_2 verbatim.
+ * Act 3 = two videos (forward/reverse) ping-ponging in a crossfaded loop, HUD text restyled
+ * neon/glitch orange to match the dark+amber footage. No photo, no background music.
+ */
+:root {
+  --color-paper:      oklch(13% 0.010 60);
+  --color-ink:        oklch(94% 0.008 80);
+  --color-ink-2:      oklch(72% 0.010 70);
+  --color-muted:      oklch(55% 0.012 65);
+  --color-rule:       oklch(30% 0.012 60);
+  --color-accent:     oklch(78% 0.14 60);
+  --color-accent-dim: oklch(62% 0.10 55);
+  --color-focus:      oklch(76% 0.18 60);
+  --neon: #ff8a3d;
+  --neon-hot: #ffb066;
+  --bg-dark: #0a0705;
+
+  --font-display: "Inter Tight", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --space-xs: 0.5rem; --space-sm: 1rem; --space-md: 1.5rem; --space-lg: 2.5rem;
+  --text-hud: 0.6875rem;
+  --text-wordmark: clamp(3.2rem, 9vw, 7.5rem);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-slow: 900ms;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow: clip; height: 100%; background: #0a0705; color: var(--color-ink); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--neon); color: #0a0705; }
+a { color: inherit; }
+
+.act { position: fixed; inset: 0; z-index: 10; background: var(--bg-dark); display: flex; align-items: center; justify-content: center;
+  transition: opacity var(--dur-slow) var(--ease-in-out), visibility 0s linear var(--dur-slow); }
+.act.is-gone { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* ---- Act 1 · Loader — blanc brillant sur fond sombre ---- */
+#loader { background: var(--bg-dark); color: #fff; font-family: var(--font-mono); }
+.loader-inner { width: min(640px, 88vw); text-align: center; }
+.loader-title {
+  font-size: 18px; font-weight: 400; letter-spacing: 0.6px; line-height: 1.8; margin-bottom: 28px;
+  color: #fff; white-space: pre-line;
+  text-shadow: 0 0 3px #fff, 0 0 9px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.35);
+}
+.loader-bar { width: 100%; height: 1px; background: rgba(255,255,255,0.14); overflow: hidden; border-radius: 2px; }
+.loader-bar-fill {
+  width: 0%; height: 100%; background: #fff; border-radius: 2px;
+  box-shadow: 0 0 6px #fff, 0 0 14px rgba(255,255,255,0.85);
+}
+.loader-pct { margin-top: 14px; font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.55); }
+
+/* bouton "click for sound" : c'est le geste utilisateur qui déverrouille l'audio
+   (les navigateurs bloquent tout son tant que la page n'a pas été cliquée) */
+#soundPrompt {
+  margin-top: 30px; font-family: var(--font-mono); font-size: 0.72rem;
+  letter-spacing: 0.26em; text-indent: 0.26em; text-transform: uppercase;
+  color: var(--neon-hot); background: none; border: 1px solid rgba(255,138,61,0.55);
+  border-radius: 999px; padding: 0.85em 2.1em; cursor: pointer;
+  text-shadow: 0 0 8px rgba(255,176,102,0.7);
+  box-shadow: 0 0 16px rgba(255,138,61,0.28), inset 0 0 10px rgba(255,138,61,0.08);
+  animation: soundPulse 1.9s ease-in-out infinite;
+  transition: opacity 550ms var(--ease-in-out), transform 550ms var(--ease-out), color 300ms, border-color 300ms;
+}
+#soundPrompt:hover { color: #fff; border-color: var(--neon-hot); }
+#soundPrompt:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+#soundPrompt.is-done {
+  animation: none; opacity: 0; transform: scale(0.94); pointer-events: none;
+}
+@keyframes soundPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255,138,61,0.28), inset 0 0 10px rgba(255,138,61,0.08); }
+  50%      { box-shadow: 0 0 30px rgba(255,138,61,0.55), inset 0 0 16px rgba(255,138,61,0.16); }
+}
+
+/* ---- Act 2 · Gate — mêmes codes couleur que le loader (--bg-dark, --neon/--neon-hot) ---- */
+#gate { background: var(--bg-dark); opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-in-out); }
+#gate.is-on { opacity: 1; visibility: visible; }
+#gate.is-gone { opacity: 0; visibility: hidden; pointer-events: none; }
+#gate .frame { display: flex; flex-direction: column; align-items: center; gap: var(--space-lg); text-align: center; padding: var(--space-md); }
+#gate .wordmark {
+  font-size: var(--text-wordmark); letter-spacing: -0.02em; line-height: 1; color: #fff;
+  text-shadow: 0 0 4px #fff, 0 0 12px rgba(255,255,255,0.85), 0 0 28px rgba(255,255,255,0.4);
+}
+#gate .wordmark .light { font-weight: 100; }
+#gate .wordmark .heavy { font-weight: 300; }
+.light { font-weight: 300; } .heavy { font-weight: 700; }
+/* tagline scramble entre le wordmark et le bouton Enter */
+#gate .gate-tagline {
+  font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.26em;
+  text-transform: uppercase; color: rgba(255,255,255,0.9); min-height: 1.2em;
+  text-shadow: 0 0 6px rgba(255,255,255,0.5), 0 0 16px rgba(255,255,255,0.3);
+}
+#enter {
+  margin-top: var(--space-md); font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.4em; text-indent: 0.4em;
+  text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px; padding: 1.1em 2.6em; cursor: pointer;
+  text-shadow: 0 0 6px #fff, 0 0 14px rgba(255,255,255,0.7);
+  transition: border-color 500ms var(--ease-out), background-color 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+#enter:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+#enter:active { transform: scale(0.97); }
+#enter:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+
+/* ---- Act 3 · video hero (ping-pong loop) ---- */
+#hero { position: fixed; inset: 0; z-index: 1; background: #0a0705; }
+#hero video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 700ms ease;
+}
+#hero video.is-active { opacity: 1; }
+/* subtle dark vignette so the neon HUD text always reads */
+#hero::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(5,3,2,0.55) 100%);
+}
+
+/* ---- HUD, neon/glitch orange ---- */
+#hud {
+  position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+  font-family: var(--font-mono); letter-spacing: 0.18em; line-height: 1.9; text-transform: uppercase;
+  transition: opacity 1.4s var(--ease-in-out) 0.3s;
+}
+#hud.is-on { opacity: 1; }
+
+.neon {
+  color: var(--neon-hot);
+  text-shadow:
+    0 0 4px var(--neon-hot),
+    0 0 11px var(--neon),
+    0 0 26px rgba(255, 122, 42, 0.55),
+    0 0 46px rgba(255, 80, 10, 0.28);
+}
+.neon-flicker { animation: neonFlicker 6s ease-in-out infinite; }
+@keyframes neonFlicker {
+  0%, 92%, 100% { opacity: 1; filter: none; }
+  93% { opacity: 0.4; }
+  94% { opacity: 1; filter: drop-shadow(2px 0 0 rgba(0,220,255,0.35)) drop-shadow(-2px 0 0 rgba(255,0,80,0.3)); }
+  94.6% { opacity: 0.65; filter: none; }
+  95% { opacity: 1; }
+}
+
+.hud-corner { position: absolute; font-size: var(--text-hud); color: rgba(255,214,180,0.82); }
+.hud-tl { top: var(--space-lg); left: var(--space-lg); }
+.hud-tl .wordmark-sm {
+  font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em;
+  text-transform: none; margin-bottom: var(--space-xs);
+}
+/* "& Sonic Architect" = même blanc lumineux que le bouton [Start a project] */
+.hud-tl .sub {
+  color: #fff;
+  text-shadow: 0 0 6px #fff, 0 0 16px rgba(255,255,255,0.6);
+}
+
+/* THE STUDIO : aussi gros que [Start a project], même blanc lumineux */
+.hud-tr { top: var(--space-lg); right: var(--space-lg); text-align: right; }
+.hud-tr .tag {
+  font-size: 1rem; font-weight: 500; letter-spacing: 0.3em;
+  color: #fff; text-shadow: 0 0 6px #fff, 0 0 16px rgba(255,255,255,0.6);
+}
+@media (max-width: 600px) {
+  .hud-tl, .hud-tr { top: var(--space-md); }
+  .hud-bl, .hud-br { bottom: var(--space-md); }
+  .hud-tl, .hud-bl { left: var(--space-md); }
+  .hud-tr, .hud-br { right: var(--space-md); }
+  .hud-tr .manifesto { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 150ms !important; }
+}
+
+/* ---- switch NEON on/off du son (sous THE STUDIO, reste dispo dans le dôme) ---- */
+#muteToggle {
+  position: fixed; top: calc(var(--space-lg) + 2.4rem); right: var(--space-lg); z-index: 30;
+  display: flex; align-items: center; gap: 0.7em; pointer-events: auto;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.26em; text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  opacity: 0; visibility: hidden; transition: opacity 600ms var(--ease-in-out), visibility 0s linear 600ms;
+}
+#muteToggle.is-visible { opacity: 1; visibility: visible; transition: opacity 600ms var(--ease-in-out); }
+#muteToggle .mt-switch {
+  position: relative; width: 40px; height: 18px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.05);
+  transition: border-color 300ms var(--ease-out), background-color 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+}
+#muteToggle .mt-knob {
+  position: absolute; top: 50%; left: 3px; transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5);
+  transition: left 300ms var(--ease-out), background-color 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+}
+/* état son ACTIF = néon allumé, knob à droite */
+#muteToggle.sound-on { color: #fff; text-shadow: 0 0 6px rgba(255,255,255,0.45); }
+#muteToggle.sound-on .mt-switch { border-color: var(--neon-hot); background: rgba(255,138,61,0.14); box-shadow: 0 0 9px var(--neon), inset 0 0 6px rgba(255,138,61,0.4); }
+#muteToggle.sound-on .mt-knob { left: 25px; background: var(--neon-hot); box-shadow: 0 0 8px var(--neon-hot), 0 0 14px var(--neon); }
+
+/* ---- transition [Enter] -> hero : flash de lignes lumineuses (shader), teinté ambre ---- */
+#enterFx {
+  position: fixed; inset: 0; z-index: 20; opacity: 0; pointer-events: none;
+  background: #000; transition: opacity 550ms ease;
+  filter: sepia(1) saturate(4.5) hue-rotate(-12deg) brightness(1.25) contrast(1.1);
+}
+#enterFx.is-on { opacity: 1; }
+#enterFx canvas { display: block; width: 100%; height: 100%; }
+
+/* ---- CTA bas-centre "Start a project" ---- */
+#ctaWrap { position: fixed; bottom: var(--space-lg); left: 50%; transform: translateX(-50%); z-index: 6;
+  display: flex; flex-direction: column; align-items: center; gap: 0.85rem; }
+/* email affiché juste au-dessus du CTA */
+.cta-email {
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,214,180,0.78); text-decoration: none;
+  text-shadow: 0 0 8px rgba(255,138,61,0.45);
+  border-bottom: 1px solid rgba(255,176,102,0.32); padding-bottom: 3px;
+  transition: color 300ms, border-color 300ms, text-shadow 300ms;
+}
+.cta-email:hover { color: #fff; border-color: var(--neon-hot); text-shadow: 0 0 10px rgba(255,176,102,0.8); }
+#startProject {
+  font-family: var(--font-mono); font-size: 1rem; font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em;
+  text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 999px; padding: 1.15em 3.2em; cursor: pointer; pointer-events: auto;
+  text-shadow: 0 0 6px #fff, 0 0 16px rgba(255,255,255,0.6);
+  transition: border-color 400ms var(--ease-out), background-color 400ms var(--ease-out), transform 400ms var(--ease-out);
+}
+#startProject:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+#startProject:active { transform: translateX(0) scale(0.97); }
+#startProject:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
+
+/* ---- credit boxes (2 à gauche, 2 à droite), apparition en cascade après le chargement ---- */
+#creditsLeft, #creditsRight {
+  position: fixed; top: 50%; transform: translateY(-50%); z-index: 5;
+  display: flex; flex-direction: column; gap: var(--space-sm);
+}
+#creditsLeft { left: var(--space-lg); }
+#creditsRight { right: var(--space-lg); align-items: flex-end; text-align: right; }
+.credit-box {
+  max-width: 15.5rem; padding: 0.85em 1.05em;
+  border: 1px solid rgba(255,176,102,0.35); border-radius: 10px;
+  background: rgba(10,7,5,0.42); backdrop-filter: blur(6px);
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.65;
+  opacity: 0; transform: translateY(14px) scale(0.95); filter: blur(6px);
+}
+.credit-box .cb-title { font-size: 0.66rem; color: var(--neon-hot); text-shadow: 0 0 7px rgba(255,176,102,0.6); }
+.credit-box .cb-sub { font-size: 0.6rem; color: rgba(255,214,180,0.62); margin-top: 4px; }
+.credit-box.pop { animation: creditPop 850ms var(--ease-out) forwards; }
+@keyframes creditPop {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.95); filter: blur(6px); box-shadow: 0 0 0 rgba(255,138,61,0); }
+  55%  { opacity: 1; box-shadow: 0 0 28px rgba(255,138,61,0.6); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); box-shadow: 0 0 15px rgba(255,138,61,0.22); }
+}
+
+/* lien de vérification du certificat Muso (URL longue -> libellé court cliquable) */
+.cb-link {
+  display: inline-block; margin-top: 7px; font-size: 0.55rem; letter-spacing: 0.14em;
+  color: var(--neon-hot); text-decoration: none;
+  border-bottom: 1px solid rgba(255,176,102,0.4); padding-bottom: 2px;
+  transition: color 260ms, border-color 260ms, text-shadow 260ms;
+}
+.cb-link:hover { color: #fff; border-color: #fff; text-shadow: 0 0 9px rgba(255,176,102,0.9); }
+
+/* ---- box "avis clients" : les vraies reviews défilent une par une ---- */
+/* la box reste ancrée à droite, mais son contenu s'aligne à gauche :
+   une citation de plusieurs lignes en drapeau à droite se lit mal. */
+/* largeur explicite : les citations sont en position:absolute, elles ne participent donc
+   pas au dimensionnement — sans width la box se rétracterait autour du seul titre et le
+   texte déborderait par-dessus la box suivante. */
+.credit-box.cb-reviews { width: 16rem; max-width: 16rem; text-align: left; }
+.cb-quote-wrap { position: relative; min-height: 5.6rem; margin-top: 8px; }
+.cb-quote {
+  position: absolute; inset: 0;
+  text-transform: none; letter-spacing: 0.01em; line-height: 1.55;
+  font-size: 0.62rem; color: rgba(255,236,220,0.9);
+  opacity: 0; transition: opacity 620ms var(--ease-in-out);
+}
+.cb-quote.is-on { opacity: 1; }
+.cb-quote .cb-author {
+  display: block; margin-top: 7px; font-size: 0.55rem; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--neon-hot); text-shadow: 0 0 7px rgba(255,176,102,0.55);
+}
+.cb-stars { font-size: 0.6rem; letter-spacing: 0.22em; color: var(--neon-hot); text-shadow: 0 0 8px rgba(255,176,102,0.7); }
+
+/* ---- box "trusted by global brands" : marques en néon ---- */
+.cb-brands { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+#creditsRight .cb-brands { justify-content: flex-end; }
+.brand {
+  font-family: var(--font-display); font-size: 0.66rem; line-height: 1;
+  padding: 0.42em 0.62em; border-radius: 5px;
+  border: 1px solid rgba(255,176,102,0.42); color: #fff;
+  text-shadow: 0 0 5px #fff, 0 0 11px var(--neon-hot), 0 0 22px rgba(255,138,61,0.55);
+  box-shadow: 0 0 9px rgba(255,138,61,0.22), inset 0 0 7px rgba(255,138,61,0.1);
+  transition: box-shadow 320ms, border-color 320ms, transform 320ms var(--ease-out);
+}
+.brand:hover { border-color: var(--neon-hot); box-shadow: 0 0 18px rgba(255,138,61,0.5), inset 0 0 12px rgba(255,138,61,0.2); transform: translateY(-1px); }
+/* clins d'œil typographiques aux marques (aucun fichier de logo : tout est du texte stylé) */
+.brand.b-netflix  { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.brand.b-hbo      { font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.brand.b-adidas   { font-weight: 700; letter-spacing: -0.01em; text-transform: lowercase; }
+.brand.b-bbc      { font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+.brand.b-fs       { font-weight: 300; letter-spacing: 0.13em; text-transform: uppercase; }
+.brand.b-qatar    { font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; }
+.brand.b-more     { border-style: dashed; border-color: rgba(255,176,102,0.3); color: rgba(255,214,180,0.75);
+                    font-weight: 400; font-style: italic; text-shadow: 0 0 6px rgba(255,138,61,0.4); box-shadow: none; }
+
+/* main text (HUD + CTA + boxes) : fade out pendant le flux "start a project" */
+#hud, #ctaWrap, #creditsLeft, #creditsRight { transition: opacity 550ms var(--ease-in-out); }
+body.project-mode #hud,
+body.project-mode #ctaWrap,
+body.project-mode #creditsLeft,
+body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
+
+/* ---- Flux "Start a project" : vidéo d'entrée -> photo floutée -> reveal contact ---- */
+#projectStage {
+  position: fixed; inset: 0; z-index: 16; background: #0a0705;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 650ms var(--ease-in-out), visibility 0s linear 650ms;
+}
+#projectStage.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 650ms var(--ease-in-out); }
+#slideVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 800ms ease; }
+#slideVideo.is-hidden { opacity: 0; }
+#domePhoto {
+  position: absolute; inset: 0;
+  background: url('assets/Photo%20dans%20le%20dome%20.png') center/cover no-repeat;
+  filter: blur(28px) brightness(0.48); transform: scale(1.12);
+  opacity: 0; transition: opacity 900ms ease;
+}
+#domePhoto.is-on { opacity: 1; }
+
+#contactOverlay {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-sm);
+  text-align: center; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.18em;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 600ms var(--ease-in-out), visibility 0s linear 600ms;
+}
+#contactOverlay.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 600ms var(--ease-in-out); }
+#contactOverlay .contact-line { font-size: 1.05rem; color: #fff; text-shadow: 0 0 6px #fff, 0 0 16px rgba(255,255,255,0.6); }
+#contactOverlay a { text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.4); padding-bottom: 3px; transition: color 300ms, border-color 300ms; }
+#contactOverlay a:hover { color: var(--neon-hot); border-color: var(--neon-hot); }
+#contactOverlay .contact-note { margin-top: var(--space-sm); font-size: 0.72rem; letter-spacing: 0.14em; color: rgba(255,255,255,0.6); text-transform: none; }
+#closeContact {
+  margin-top: var(--space-lg); font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.3em; text-indent: 0.3em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6); background: none; border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 999px; padding: 0.8em 2em; cursor: pointer;
+  transition: color 300ms, border-color 300ms;
+}
+#closeContact:hover { color: #fff; border-color: #fff; }
+
+/* ---- Formulaire de contact (dans le dôme) ---- */
+#contactOverlay { overflow-y: auto; padding: var(--space-lg) var(--space-md); }
+#projectForm {
+  width: min(560px, 90vw); display: flex; flex-direction: column; gap: var(--space-md);
+  text-align: left; text-transform: none; letter-spacing: normal;
+}
+#projectForm .pf-heading {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 4.6vw, 2.4rem); font-weight: 500;
+  color: #fff; letter-spacing: -0.01em; line-height: 1.1; text-align: center;
+  text-shadow: 0 0 12px rgba(255,255,255,0.35);
+}
+#projectForm .pf-sub {
+  font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.7;
+  color: rgba(255,255,255,0.72); text-align: center; margin-bottom: var(--space-xs);
+}
+.pf-field { display: flex; flex-direction: column; gap: 8px; }
+.pf-label { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+#pfType, #pfMessage {
+  font-family: var(--font-mono); font-size: 0.9rem; color: #fff; width: 100%; outline: none;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.28); border-radius: 10px;
+  padding: 0.9em 1em; transition: border-color 300ms, background-color 300ms;
+}
+#pfType:focus, #pfMessage:focus { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.08); }
+#pfType option { background: #14100c; color: #fff; }
+#pfMessage { min-height: 120px; resize: vertical; line-height: 1.6; }
+#pfMessage::placeholder { color: rgba(255,255,255,0.42); }
+.pf-send {
+  align-self: center; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.28em; text-indent: 0.28em;
+  text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px;
+  padding: 0.95em 2.6em; cursor: pointer; text-shadow: 0 0 6px rgba(255,255,255,0.5);
+  transition: border-color 300ms, background-color 300ms;
+}
+.pf-send:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+.pf-email { font-family: var(--font-mono); font-size: 0.85rem; text-align: center; color: rgba(255,255,255,0.7); margin-top: var(--space-xs); }
+.pf-email a { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.4); text-decoration: none; padding-bottom: 2px; }
+
+/* ---- credit boxes visibles aussi en mobile : 2 colonnes ancrées en bas ---- */
+@media (max-width: 760px) {
+  #creditsLeft, #creditsRight {
+    top: auto; bottom: 92px; transform: none; gap: 8px; width: 45vw; max-width: 45vw;
+  }
+  #creditsLeft { left: 10px; }
+  #creditsRight { right: 10px; align-items: stretch; text-align: left; }
+  .credit-box { max-width: none; width: 100%; padding: 0.6em 0.7em; border-radius: 8px; line-height: 1.42; }
+  .credit-box.cb-reviews { width: 100%; max-width: none; }
+  .credit-box .cb-title { font-size: 0.52rem; letter-spacing: 0.04em; }
+  .credit-box .cb-sub { font-size: 0.47rem; margin-top: 2px; }
+  /* avis + marques compactés pour tenir dans la colonne mobile */
+  .cb-link { font-size: 0.45rem; margin-top: 5px; letter-spacing: 0.08em; }
+  .cb-stars { font-size: 0.5rem; letter-spacing: 0.16em; }
+  .cb-quote-wrap { min-height: 5.2rem; margin-top: 5px; }
+  .cb-quote { font-size: 0.5rem; line-height: 1.45; }
+  .cb-quote .cb-author { font-size: 0.45rem; margin-top: 4px; }
+  #creditsRight .cb-brands { justify-content: flex-start; }
+  .cb-brands { gap: 4px; margin-top: 6px; }
+  .brand { font-size: 0.5rem; padding: 0.34em 0.48em; border-radius: 4px; }
+  /* le CTA porte maintenant l'email au-dessus du bouton : on remonte les boxes */
+  #creditsLeft, #creditsRight { bottom: 122px; }
+  .cta-email { font-size: 0.58rem; letter-spacing: 0.14em; }
+  #ctaWrap { gap: 0.6rem; }
+  .hud-tr .tag { font-size: 0.72rem; letter-spacing: 0.2em; }
+  .hud-tl .wordmark-sm { font-size: 1.35rem; }
+  /* CTA compact, une seule ligne, sous les boxes */
+  #ctaWrap { bottom: var(--space-md); }
+  #startProject { font-size: 0.72rem; letter-spacing: 0.18em; text-indent: 0.18em; padding: 0.85em 1.9em; white-space: nowrap; }
+  #muteToggle { top: calc(var(--space-md) + 1.9rem); right: var(--space-md); font-size: 0.55rem; letter-spacing: 0.18em; }
+}
+</style>
+</head>
+<body>
+
+<!-- Act 3 · video hero -->
+<div id="hero">
+  <video id="vA" muted playsinline preload="auto" src="assets/Main%20video.mp4"></video>
+  <video id="vB" muted playsinline preload="auto" src="assets/Main%20video%20reverse.mp4"></video>
+</div>
+
+<!-- transition [Enter] : flash shader (lignes lumineuses), teinté ambre en CSS -->
+<div id="enterFx"></div>
+
+<!-- switch NEON on/off du son (sous THE STUDIO, reste dispo dans le dôme) -->
+<button id="muteToggle" class="sound-on" type="button" aria-label="Toggle sound" aria-pressed="true">
+  <span class="mt-label">Sound</span>
+  <span class="mt-switch"><span class="mt-knob"></span></span>
+</button>
+
+<!-- Act 3 · HUD -->
+<div id="hud">
+  <div class="hud-corner hud-tl">
+    <div class="wordmark-sm neon neon-flicker"><span class="light">by</span><span class="heavy">Gauthier</span></div>
+    <div class="neon">// Bespoke Composer</div>
+    <div class="sub">&amp; Sonic Architect</div>
+  </div>
+
+  <div class="hud-corner hud-tr">
+    <div class="tag">////// The Studio</div>
+  </div>
+</div>
+
+<!-- credit boxes : gauche (les 3 preuves "chiffres / certification / labels") -->
+<div id="creditsLeft">
+  <div class="credit-box" id="cl1">
+    <div class="cb-title">+200k physical albums sold</div>
+  </div>
+  <div class="credit-box" id="cl2">
+    <div class="cb-title">Certified top 10% producer worldwide</div>
+    <div class="cb-sub">by Muso Global Ent.</div>
+    <a class="cb-link" id="musoLink"
+       href="https://credits.muso.ai/profile/d2bb7542-8db0-4cf1-8c53-a1ff4aff4716"
+       target="_blank" rel="noopener noreferrer">[ Verify on muso.ai → ]</a>
+  </div>
+  <div class="credit-box" id="cl3">
+    <div class="cb-title">Major-label credits</div>
+    <div class="cb-sub">Sony · Universal</div>
+  </div>
+</div>
+
+<!-- credit boxes : droite (avis clients qui défilent + marques) -->
+<div id="creditsRight">
+  <div class="credit-box cb-reviews" id="cr1">
+    <div class="cb-title">Testimonials</div>
+    <div class="cb-stars">★★★★★</div>
+    <div class="cb-quote-wrap" id="reviewsWrap"></div>
+  </div>
+  <div class="credit-box" id="cr2">
+    <div class="cb-title">Trusted by global brands</div>
+    <div class="cb-brands">
+      <span class="brand b-netflix">Netflix</span>
+      <span class="brand b-fs">Four Seasons</span>
+      <span class="brand b-adidas">adidas</span>
+      <span class="brand b-bbc">BBC One</span>
+      <span class="brand b-qatar">Qatar 2022</span>
+      <span class="brand b-hbo">HBO</span>
+      <span class="brand b-more">&amp; many more</span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA bas-centre -->
+<div id="ctaWrap">
+  <button id="startProject">[ Start a project ]</button>
+  <a class="cta-email" href="mailto:hello@bygauthier.com">hello@bygauthier.com</a>
+</div>
+
+<!-- Flux "Start a project" : vidéo d'entrée -> photo floutée -> reveal contact -->
+<div id="projectStage">
+  <video id="slideVideo" muted playsinline preload="auto" src="assets/%5BStart%20project%5D%20video%20slide.mp4"></video>
+  <div id="domePhoto"></div>
+  <div id="contactOverlay">
+    <form id="projectForm" novalidate>
+      <div class="pf-heading">Tell me what you're building.</div>
+      <div class="pf-sub">Whether you're launching a luxury hotel, a Web3 platform, a property brand or simply want your business to sound unlike anyone else… Let's create something exclusive.</div>
+
+      <div class="pf-field">
+        <label class="pf-label" for="pfType">I am…</label>
+        <select id="pfType">
+          <option value="" disabled selected>Select one…</option>
+          <option>Luxury Hotel</option>
+          <option>Real Estate</option>
+          <option>Web3</option>
+          <option>Hospitality</option>
+          <option>Agency</option>
+          <option>Creator</option>
+          <option>Startup</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="pf-field">
+        <label class="pf-label" for="pfMessage">Tell me about your project</label>
+        <textarea id="pfMessage" rows="4"></textarea>
+      </div>
+
+      <button type="submit" class="pf-send">[ Send ]</button>
+      <div class="pf-email"><a href="mailto:hello@bygauthier.com">hello@bygauthier.com</a></div>
+    </form>
+    <button id="closeContact">[ Close ]</button>
+  </div>
+</div>
+
+<!-- Act 2 · Gate -->
+<section id="gate" class="act" aria-label="Enter">
+  <div class="frame">
+    <div class="wordmark" role="heading" aria-level="1"><span class="light">by</span><span class="heavy">Gauthier</span></div>
+    <p class="gate-tagline" id="gateTagline">Your brand. Your music. Nobody else's.</p>
+    <button id="enter">[&nbsp;Enter&nbsp;]</button>
+  </div>
+</section>
+
+<!-- Act 1 · Loader (igloo-clone) -->
+<section id="loader" class="act" aria-label="Loading">
+  <div class="loader-inner">
+    <div class="loader-title" id="loaderTitle">I compose bespoke music and immersive sound design for luxury brands, elite creators and digital experiences that want to be remembered — not just seen.
+
+Every composition is yours alone, with 100% commercial ownership.</div>
+    <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+    <div class="loader-pct" id="loaderPct">0%</div>
+    <button id="soundPrompt" type="button">[ Click for sound ]</button>
+  </div>
+</section>
+
+<script type="importmap">
+{ "imports": {
+  "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+} }
+</script>
+<script type="module">
+import gsap from 'gsap';
+import * as THREE from 'three';
+
+const loaderEl = document.getElementById('loader');
+const gateEl = document.getElementById('gate');
+const hudEl = document.getElementById('hud');
+const loaderFill = document.getElementById('loaderFill');
+const loaderPct = document.getElementById('loaderPct');
+
+/* ---- sons (assets fournis par l'user) ----
+   cache-bust systématique : ces fichiers sont régulièrement remplacés (même nom,
+   nouveau contenu) pendant les révisions, et un navigateur qui a déjà visité la page
+   peut resservir l'ancienne version depuis son cache HTTP sans jamais retélécharger
+   la nouvelle. Le "?v=" (horodatage du chargement) force un fetch réseau à chaque
+   ouverture de page, donc chaque nouvel export est bien celui qui est joué. */
+const ASSET_BUST = Date.now();
+const audioAsset = (name) => new Audio('assets/' + encodeURIComponent(name) + '?v=' + ASSET_BUST);
+
+const sfxTyping = audioAsset('Typing intro .wav');
+sfxTyping.loop = true; // couvre toute la durée du chargement quel que soit le moment du clic
+const sfx100 = audioAsset('100% sound .wav');
+const sfxEnter = audioAsset('[enter] button.wav');
+const loopMain = audioAsset('Loop music main 2 .mp3');
+loopMain.loop = true;
+const effectSlide = audioAsset('Effect sliding dome .mp3');
+const musicDome = audioAsset('Music in dome .mp3');
+musicDome.loop = true;
+
+/* la barre de 100% n'est pas dans un handler de clic (elle finit toute seule) :
+   les navigateurs peuvent bloquer son autoplay si l'utilisateur n'a encore rien cliqué/tapé
+   pendant le chargement. On "déverrouille" tous les sons dès le tout premier geste. */
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  [sfx100, sfxEnter, loopMain, effectSlide, musicDome].forEach((a) => {
+    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+  });
+}
+document.addEventListener('pointerdown', unlockAudio, { once: true });
+document.addEventListener('keydown', unlockAudio, { once: true });
+
+/* ---- bouton [Click for sound] du loader : le geste qui autorise l'audio ----
+   il lance la frappe au clavier, qui tourne jusqu'à l'arrivée du son "100%". */
+const soundPrompt = document.getElementById('soundPrompt');
+let typingStarted = false;
+soundPrompt.addEventListener('click', () => {
+  unlockAudio();
+  typingStarted = true;
+  sfxTyping.currentTime = 0;
+  sfxTyping.play().catch(() => {});
+  soundPrompt.classList.add('is-done');
+});
+
+/* coupe la frappe en douceur (petit fondu plutôt qu'un arrêt sec) */
+function stopTyping() {
+  if (!typingStarted) return;
+  typingStarted = false;
+  const from = sfxTyping.volume;
+  const t0 = performance.now();
+  // fondu cosmétique…
+  (function fade(now) {
+    const p = Math.min(1, ((now || performance.now()) - t0) / 260);
+    sfxTyping.volume = Math.max(0, from * (1 - p));
+    if (p < 1) requestAnimationFrame(fade);
+  })(t0);
+  // …mais l'arrêt lui-même est garanti par un timer : si l'onglet passe en arrière-plan,
+  // requestAnimationFrame est gelé et le fondu seul ne couperait jamais le son.
+  setTimeout(() => {
+    sfxTyping.pause();
+    sfxTyping.currentTime = 0;
+    sfxTyping.volume = from;
+  }, 300);
+}
+
+/* ---- switch NEON on/off : coupe / rétablit toute la musique + les effets ---- */
+const allAudio = [sfxTyping, sfx100, sfxEnter, loopMain, effectSlide, musicDome];
+const muteToggle = document.getElementById('muteToggle');
+let soundOn = true;
+function applyMute() {
+  allAudio.forEach((a) => { a.muted = !soundOn; });
+  muteToggle.classList.toggle('sound-on', soundOn);
+  muteToggle.setAttribute('aria-pressed', String(soundOn));
+}
+muteToggle.addEventListener('click', () => {
+  soundOn = !soundOn;
+  applyMute();
+});
+
+/* ---- effet "SpecialText" (scramble -> décodage) porté en vanilla JS ----
+   phase 1 : brouillage complet ; phase 2 : révélation gauche->droite avec un curseur "_",
+   le reste continue de défiler en caractères aléatoires. */
+const SCRAMBLE_CHARS = '_!X$0-+*#';
+function randChar(prev) {
+  let c;
+  do { c = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]; } while (c === prev);
+  return c;
+}
+function scrambleReveal(el, text, { duration = 4200, scramblePhase = 0.16 } = {}) {
+  const n = text.length;
+  const start = performance.now();
+  const holdMs = duration * scramblePhase;
+  function frame(now) {
+    const t = now - start;
+    let out = '';
+    if (t < holdMs) {
+      for (let i = 0; i < n; i++) out += /\s/.test(text[i]) ? text[i] : randChar(out[i - 1]);
+    } else {
+      const p = Math.min(1, (t - holdMs) / (duration - holdMs));
+      const revealed = Math.floor(p * n);
+      for (let i = 0; i < n; i++) {
+        if (/\s/.test(text[i])) { out += text[i]; continue; }
+        if (i < revealed) out += text[i];
+        else if (i === revealed) out += '_';
+        else out += randChar(out[i - 1]);
+      }
+    }
+    el.textContent = out;
+    if (t < duration) requestAnimationFrame(frame);
+    else el.textContent = text;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* lancement de l'effet sur le message de chargement (dès l'ouverture, le temps de lire) */
+const loaderTitle = document.getElementById('loaderTitle');
+const loaderFullText = loaderTitle.textContent;
+scrambleReveal(loaderTitle, loaderFullText, { duration: 5200 });
+
+/* ---- Act 1 : loader, 7.5s (5s +50% pour laisser le temps de lire le message) ---- */
+const gateTagline = document.getElementById('gateTagline');
+const gateTaglineText = gateTagline.textContent;
+gsap.to({ p: 0 }, {
+  p: 100, duration: 7.5, ease: 'power1.inOut',
+  onUpdate() {
+    const v = this.targets()[0].p;
+    loaderFill.style.width = v + '%';
+    loaderPct.textContent = Math.round(v) + '%';
+  },
+  onComplete() {
+    stopTyping();               // la frappe s'arrête pile quand le "100%" arrive
+    sfx100.currentTime = 0;
+    sfx100.play().catch(() => {});
+    loaderEl.classList.add('is-gone');
+    gateEl.classList.add('is-on');
+    // même effet scramble sur la tagline du gate, une fois qu'il apparaît
+    setTimeout(() => scrambleReveal(gateTagline, gateTaglineText, { duration: 1900 }), 500);
+  },
+});
+
+/* ---- Act 3 : video ping-pong loop (forward -> reverse -> forward -> ...) ---- */
+const vA = document.getElementById('vA');
+const vB = document.getElementById('vB');
+let current = vA, next = vB;
+
+function playCurrent() {
+  current.currentTime = 0;
+  current.classList.add('is-active');
+  next.classList.remove('is-active');
+  const p = current.play();
+  if (p && p.catch) p.catch(() => {
+    // filet de sécurité : certains navigateurs/outils rejettent le tout premier
+    // play() suite au clic ; on retente une fois juste après.
+    setTimeout(() => current.play().catch(() => {}), 60);
+  });
+}
+// filet supplémentaire : si jamais aucune vidéo ne joue après Enter, un second clic relance
+document.addEventListener('click', () => {
+  if (hudEl.classList.contains('is-on') && current.paused) current.play().catch(() => {});
+});
+
+function swap() {
+  [current, next] = [next, current];
+  playCurrent();
+}
+vA.addEventListener('ended', swap);
+vB.addEventListener('ended', swap);
+
+/* ---- transition [Enter] -> hero : shader de lignes lumineuses (GLSL porté depuis le
+   composant React fourni, sans React/shadcn/Tailwind — juste le vertex+fragment shader
+   + THREE.js brut, qu'on a déjà dans ce fichier) ---- */
+function runEnterShader(durationMs = 1000) {
+  const container = document.getElementById('enterFx');
+  const vertexShader = `
+    void main() { gl_Position = vec4( position, 1.0 ); }
+  `;
+  const fragmentShader = `
+    precision highp float;
+    uniform vec2 resolution;
+    uniform float time;
+    void main(void) {
+      vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+      float t = time * 0.05;
+      float lineWidth = 0.002;
+      vec3 color = vec3(0.0);
+      for (int j = 0; j < 3; j++) {
+        for (int i = 0; i < 5; i++) {
+          color[j] += lineWidth * float(i*i) / abs(fract(t - 0.01*float(j) + float(i)*0.01) * 5.0 - length(uv) + mod(uv.x+uv.y, 0.2));
+        }
+      }
+      gl_FragColor = vec4(color[0], color[1], color[2], 1.0);
+    }
+  `;
+  const camera = new THREE.Camera(); camera.position.z = 1;
+  const scene = new THREE.Scene();
+  const uniforms = { time: { value: 1.0 }, resolution: { value: new THREE.Vector2() } };
+  const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  scene.add(mesh);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  container.appendChild(renderer.domElement);
+  uniforms.resolution.value.set(renderer.domElement.width, renderer.domElement.height);
+
+  container.classList.add('is-on');
+  let raf, running = true;
+  (function animate() {
+    if (!running) return;
+    raf = requestAnimationFrame(animate);
+    uniforms.time.value += 0.05;
+    renderer.render(scene, camera);
+  })();
+
+  setTimeout(() => {
+    container.classList.remove('is-on'); // fade out (CSS transition 550ms) en révélant le hero dessous
+    setTimeout(() => {
+      running = false; cancelAnimationFrame(raf);
+      container.removeChild(renderer.domElement);
+      renderer.dispose(); mesh.geometry.dispose(); material.dispose();
+    }, 600);
+  }, durationMs);
+}
+
+/* ---- cascade d'apparition des credit boxes (une après l'autre, une fois la page chargée) ---- */
+function revealCredits() {
+  ['cl1', 'cr1', 'cl2', 'cr2', 'cl3'].forEach((id, i) => {
+    setTimeout(() => document.getElementById(id).classList.add('pop'), 1200 + i * 430);
+  });
+}
+
+/* ---- avis clients (vraies reviews Fiverr) : une nouvelle toutes les 4s ---- */
+const REVIEWS = [
+  ['Gauthier produces high-level, competitive K-Pop, Pop and Hip-Hop tracks, attracting strong label interest and growing demand for his mixing services.', 'Lianne · A&R, Sony Music'],
+  ['Top class! The work we’ve done has featured on Adidas advert, Netflix placements, FIFA World Cup 2022. Super talented guy and reliable also. 10/10.', 'Alex · Music Director'],
+  ['Absolutely amazing work. Super professional, fast communication, and the final mix/master sounded clean, powerful and industry quality. Will be back for sure!', 'Mr. Vinte · Director'],
+  ['His production skills and creativity are unmatched. On top of that he is super polite and goes above and beyond to make sure you’re satisfied!', 'Blape · Creative Agency'],
+  ['Incredible experience! He elevated my track beyond my expectations, stayed super active, and delivered the vision perfectly. Highly recommend!', 'Celly · Creative Agency'],
+  ['Put a lot of effort to respect the tight delay, paid attention to every single detail so the work could be exactly what I was expecting.', 'Thiblrq · Artist'],
+  ['Very talented and professional musician. Excellent communication and execution of the song.', 'JL Davis · Artist'],
+];
+/* la box a été réduite pour ne plus cacher le dôme en mobile : les avis trop longs
+   sont coupés à la limite d'un mot et terminés par "{…}" plutôt que débordés. */
+const QUOTE_MAX_CHARS = 100;
+function truncateQuote(text) {
+  if (text.length <= QUOTE_MAX_CHARS) return text;
+  const cut = text.slice(0, QUOTE_MAX_CHARS);
+  const lastSpace = cut.lastIndexOf(' ');
+  return cut.slice(0, lastSpace > 0 ? lastSpace : QUOTE_MAX_CHARS) + ' {…}';
+}
+
+const reviewsWrap = document.getElementById('reviewsWrap');
+REVIEWS.forEach(([quote, author], i) => {
+  const el = document.createElement('div');
+  el.className = 'cb-quote' + (i === 0 ? ' is-on' : '');
+  el.innerHTML = '“' + truncateQuote(quote) + '”<span class="cb-author"></span>';
+  el.querySelector('.cb-author').textContent = author;
+  reviewsWrap.appendChild(el);
+});
+let reviewIndex = 0;
+setInterval(() => {
+  const slides = reviewsWrap.children;
+  slides[reviewIndex].classList.remove('is-on');
+  reviewIndex = (reviewIndex + 1) % slides.length;
+  slides[reviewIndex].classList.add('is-on');
+}, 4000);
+
+/* ---- Act 2 -> Act 3 ---- */
+document.getElementById('enter').addEventListener('click', () => {
+  gateEl.classList.remove('is-on');
+  gateEl.classList.add('is-gone');
+  runEnterShader(1000);
+  hudEl.classList.add('is-on');
+  muteToggle.classList.add('is-visible');
+  playCurrent();
+  revealCredits();
+  sfxEnter.currentTime = 0;
+  sfxEnter.play().catch(() => {});
+  loopMain.currentTime = 0;
+  loopMain.play().catch(() => {});
+});
+
+/* ---- CTA "Start a project" : on entre dans le studio (vidéo) -> photo floutée -> contact ---- */
+const startBtn = document.getElementById('startProject');
+const projectStage = document.getElementById('projectStage');
+const slideVideo = document.getElementById('slideVideo');
+const domePhoto = document.getElementById('domePhoto');
+const contactOverlay = document.getElementById('contactOverlay');
+const closeContact = document.getElementById('closeContact');
+
+startBtn.addEventListener('click', () => {
+  // musique : on coupe la principale, on joue l'effet d'entrée UNE fois
+  loopMain.pause();
+  musicDome.pause(); musicDome.currentTime = 0;
+  effectSlide.currentTime = 0;
+  effectSlide.play().catch(() => {});
+  // fondu de tous les textes de la page principale
+  document.body.classList.add('project-mode');
+  // on montre la scène "projet" + on lance la vidéo d'entrée dans le studio
+  slideVideo.classList.remove('is-hidden');
+  domePhoto.classList.remove('is-on');
+  contactOverlay.classList.remove('is-on');
+  projectStage.classList.add('is-on');
+  slideVideo.currentTime = 0;
+  const p = slideVideo.play();
+  if (p && p.catch) p.catch(() => setTimeout(() => slideVideo.play().catch(() => {}), 60));
+});
+
+// dès que l'effet d'entrée est fini -> "Music in dome" en boucle tant qu'on est dans le dôme
+effectSlide.addEventListener('ended', () => {
+  if (!document.body.classList.contains('project-mode')) return; // on a déjà fermé
+  musicDome.currentTime = 0;
+  musicDome.play().catch(() => {});
+});
+
+// à la fin de la vidéo : photo du dôme floutée en fond, puis reveal du contact
+slideVideo.addEventListener('ended', () => {
+  slideVideo.classList.add('is-hidden');
+  domePhoto.classList.add('is-on');
+  setTimeout(() => contactOverlay.classList.add('is-on'), 550);
+});
+
+// close : retour à la page principale + la musique principale reprend
+closeContact.addEventListener('click', () => {
+  contactOverlay.classList.remove('is-on');
+  projectStage.classList.remove('is-on');   // fade out de la scène -> révèle le hero dessous
+  document.body.classList.remove('project-mode'); // les textes reviennent
+  // musique : on coupe le dôme, on reprend la principale
+  effectSlide.pause(); effectSlide.currentTime = 0;
+  musicDome.pause(); musicDome.currentTime = 0;
+  loopMain.play().catch(() => {});
+  // reset pour la prochaine ouverture
+  setTimeout(() => {
+    slideVideo.pause();
+    slideVideo.currentTime = 0;
+    slideVideo.classList.remove('is-hidden');
+    domePhoto.classList.remove('is-on');
+  }, 700);
+});
+
+/* ---- formulaire : placeholder qui tourne toutes les 5s + envoi via mail ---- */
+const pfMessage = document.getElementById('pfMessage');
+const pfType = document.getElementById('pfType');
+const projectForm = document.getElementById('projectForm');
+const PLACEHOLDERS = [
+  "We're opening a boutique hotel in Dubai and need a signature sound for the guest journey…",
+  "I publish luxury property reels every day and I'm looking for original commercial-quality music.",
+  "I want my website to look and sound unique.",
+];
+let phIndex = 0;
+pfMessage.placeholder = PLACEHOLDERS[0];
+setInterval(() => {
+  phIndex = (phIndex + 1) % PLACEHOLDERS.length;
+  pfMessage.placeholder = PLACEHOLDERS[phIndex];
+}, 5000);
+
+projectForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const who = pfType.value || 'Someone';
+  const msg = pfMessage.value.trim();
+  const subject = encodeURIComponent(`New project — ${who}`);
+  const body = encodeURIComponent(`I am: ${who}\n\n${msg}`);
+  window.location.href = `mailto:hello@bygauthier.com?subject=${subject}&body=${body}`;
+});
+</script>
+</body>
+</html>
