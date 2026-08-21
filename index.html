@@ -49,6 +49,9 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+/* garantit que l'attribut [hidden] gagne toujours, meme face a un display:flex
+   declare ailleurs sur le meme element (ex : #projectForm, .pf-success) */
+[hidden] { display: none !important; }
 html, body { overflow: clip; height: 100%; background: #0a0705; color: var(--color-ink); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
 ::selection { background: var(--neon); color: #0a0705; }
 a { color: inherit; }
@@ -382,12 +385,13 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 }
 .pf-field { display: flex; flex-direction: column; gap: 8px; }
 .pf-label { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
-#pfType, #pfMessage {
+#pfEmail, #pfType, #pfMessage {
   font-family: var(--font-mono); font-size: 0.9rem; color: #fff; width: 100%; outline: none;
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.28); border-radius: 10px;
   padding: 0.9em 1em; transition: border-color 300ms, background-color 300ms;
 }
-#pfType:focus, #pfMessage:focus { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.08); }
+#pfEmail:focus, #pfType:focus, #pfMessage:focus { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.08); }
+#pfEmail::placeholder { color: rgba(255,255,255,0.42); }
 #pfType option { background: #14100c; color: #fff; }
 #pfMessage { min-height: 120px; resize: vertical; line-height: 1.6; }
 #pfMessage::placeholder { color: rgba(255,255,255,0.42); }
@@ -395,11 +399,25 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   align-self: center; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.28em; text-indent: 0.28em;
   text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px;
   padding: 0.95em 2.6em; cursor: pointer; text-shadow: 0 0 6px rgba(255,255,255,0.5);
-  transition: border-color 300ms, background-color 300ms;
+  transition: opacity 300ms, border-color 300ms, background-color 300ms;
 }
+.pf-send:disabled { opacity: 0.5; cursor: default; }
 .pf-send:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
 .pf-email { font-family: var(--font-mono); font-size: 0.85rem; text-align: center; color: rgba(255,255,255,0.7); margin-top: var(--space-xs); }
 .pf-email a { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.4); text-decoration: none; padding-bottom: 2px; }
+
+/* etat du bouton d'envoi : neutre (rien), en cours, erreur */
+.pf-status { min-height: 1.2em; text-align: center; font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.06em; }
+.pf-status.is-sending { color: rgba(255,255,255,0.55); }
+.pf-status.is-error { color: #ff9d8a; }
+
+/* etat de confirmation : remplace le formulaire, memes codes que le reste du dome */
+.pf-success { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.pf-success-mark {
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.6); margin-bottom: 4px;
+}
 
 /* ---- credit boxes visibles aussi en mobile : 2 colonnes ancrées en bas ---- */
 @media (max-width: 760px) {
@@ -519,6 +537,11 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
       <div class="pf-sub">Whether you're launching a luxury hotel, a Web3 platform, a property brand or simply want your business to sound unlike anyone else… Let's create something exclusive.</div>
 
       <div class="pf-field">
+        <label class="pf-label" for="pfEmail">Your email</label>
+        <input type="email" id="pfEmail" required placeholder="you@company.com">
+      </div>
+
+      <div class="pf-field">
         <label class="pf-label" for="pfType">I am…</label>
         <select id="pfType">
           <option value="" disabled selected>Select one…</option>
@@ -538,9 +561,18 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
         <textarea id="pfMessage" rows="4"></textarea>
       </div>
 
-      <button type="submit" class="pf-send">[ Send ]</button>
-      <div class="pf-email"><a href="mailto:hello@bygauthier.com">hello@bygauthier.com</a></div>
+      <button type="submit" class="pf-send" id="pfSend">[ Send ]</button>
+      <div class="pf-status" id="pfStatus" role="status" aria-live="polite"></div>
+      <div class="pf-email">Prefer email? <a href="mailto:hello@bygauthier.com">hello@bygauthier.com</a></div>
     </form>
+
+    <!-- etat de confirmation : remplace le formulaire une fois l'envoi confirme par Formspree -->
+    <div id="pfSuccess" class="pf-success" hidden>
+      <div class="pf-success-mark">✓</div>
+      <div class="pf-heading">Message sent.</div>
+      <div class="pf-sub">I read every message myself — expect a reply within 24h.</div>
+    </div>
+
     <button id="closeContact">[ Close ]</button>
   </div>
 </div>
@@ -921,12 +953,24 @@ closeContact.addEventListener('click', () => {
     slideVideo.currentTime = 0;
     slideVideo.classList.remove('is-hidden');
     domePhoto.classList.remove('is-on');
+    // le formulaire redevient vierge : sinon un visiteur qui rouvre revoit
+    // "Message sent" au lieu d'un formulaire pret pour un nouveau message
+    document.getElementById('projectForm').hidden = false;
+    document.getElementById('projectForm').reset();
+    document.getElementById('pfSuccess').hidden = true;
+    document.getElementById('pfStatus').textContent = '';
+    document.getElementById('pfStatus').className = 'pf-status';
+    document.getElementById('pfSend').disabled = false;
   }, 700);
 });
 
-/* ---- formulaire : placeholder qui tourne toutes les 5s + envoi via mail ---- */
+/* ---- formulaire : placeholder qui tourne toutes les 5s + envoi automatique ---- */
+const pfEmail = document.getElementById('pfEmail');
 const pfMessage = document.getElementById('pfMessage');
 const pfType = document.getElementById('pfType');
+const pfSend = document.getElementById('pfSend');
+const pfStatus = document.getElementById('pfStatus');
+const pfSuccess = document.getElementById('pfSuccess');
 const projectForm = document.getElementById('projectForm');
 const PLACEHOLDERS = [
   "We're opening a boutique hotel in Dubai and need a signature sound for the guest journey…",
@@ -940,13 +984,43 @@ setInterval(() => {
   pfMessage.placeholder = PLACEHOLDERS[phIndex];
 }, 5000);
 
-projectForm.addEventListener('submit', (e) => {
+/* le formulaire poste directement vers hello@bygauthier.com via Formspree :
+   le site est 100% statique (GitHub Pages), donc aucun serveur ici ne peut
+   envoyer un mail lui-même — Formspree fait ce relais. Le mailto: visible sous
+   le formulaire reste en secours si jamais l'envoi echoue. */
+const FORM_ENDPOINT = 'https://formspree.io/f/xqpznrpz';
+
+projectForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  pfStatus.textContent = '';
+  pfStatus.className = 'pf-status is-sending';
+  pfStatus.textContent = 'Sending…';
+  pfSend.disabled = true;
+
   const who = pfType.value || 'Someone';
   const msg = pfMessage.value.trim();
-  const subject = encodeURIComponent(`New project — ${who}`);
-  const body = encodeURIComponent(`I am: ${who}\n\n${msg}`);
-  window.location.href = `mailto:hello@bygauthier.com?subject=${subject}&body=${body}`;
+
+  try {
+    const res = await fetch(FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: pfEmail.value.trim(),
+        type: who,
+        message: msg,
+        _subject: `New project — ${who}`,
+      }),
+    });
+
+    if (!res.ok) throw new Error('Formspree responded ' + res.status);
+
+    projectForm.hidden = true;
+    pfSuccess.hidden = false;
+  } catch (err) {
+    pfStatus.className = 'pf-status is-error';
+    pfStatus.textContent = "Couldn't send — please use the email link below instead.";
+    pfSend.disabled = false;
+  }
 });
 </script>
 </body>
