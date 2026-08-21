@@ -6,7 +6,12 @@
 <title>byGauthier — Sonic Architect</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100;200;300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<!-- Display = Cabinet Grotesk (byGauthier house type, Fontshare). Its own request:
+     Fontshare drops the second family if you pack two into one f[] query. -->
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@100,300,400,500,700,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Act 1 loader = igloo-clone (gsap 5s, "Hi, I'm Gauthier..."). Act 2 gate = template_2 verbatim.
  * Act 3 = two videos (forward/reverse) ping-ponging in a crossfaded loop, HUD text restyled
@@ -25,7 +30,7 @@
   --neon-hot: #ffb066;
   --bg-dark: #0a0705;
 
-  --font-display: "Inter Tight", "Helvetica Neue", sans-serif;
+  --font-display: "Cabinet Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
 
   --space-xs: 0.5rem; --space-sm: 1rem; --space-md: 1.5rem; --space-lg: 2.5rem;
