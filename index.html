@@ -343,7 +343,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 #slideVideo.is-hidden { opacity: 0; }
 #domePhoto {
   position: absolute; inset: 0;
-  background: url('assets/Photo%20dans%20le%20dome%20.png') center/cover no-repeat;
+  background: url('assets/Photo%20dans%20le%20dome.jpg') center/cover no-repeat;
   filter: blur(28px) brightness(0.48); transform: scale(1.12);
   opacity: 0; transition: opacity 900ms ease;
 }
@@ -456,8 +456,11 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 
 <!-- Act 3 · video hero -->
 <div id="hero">
+  <!-- vA se charge en priorite (premiere chose visible). vB (retour de la boucle) attend
+       d'etre declenche en JS juste apres Enter, pour ne pas se battre pour la bande passante
+       avec vA sur une connexion lente -->
   <video id="vA" muted playsinline preload="auto" src="assets/Main%20video.mp4"></video>
-  <video id="vB" muted playsinline preload="auto" src="assets/Main%20video%20reverse.mp4"></video>
+  <video id="vB" muted playsinline preload="none" src="assets/Main%20video%20reverse.mp4"></video>
 </div>
 
 <!-- transition [Enter] : flash shader (lignes lumineuses), teinté ambre en CSS -->
@@ -529,7 +532,10 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 
 <!-- Flux "Start a project" : vidéo d'entrée -> photo floutée -> reveal contact -->
 <div id="projectStage">
-  <video id="slideVideo" muted playsinline preload="auto" src="assets/%5BStart%20project%5D%20video%20slide.mp4"></video>
+  <!-- 22 Mo : la plus lourde des trois videos, et beaucoup de visiteurs ne cliqueront
+       jamais sur "Start a project". preload="none" -> ne se telecharge que sur signal
+       d'intention (survol/touch du bouton) ou, a defaut, en tache de fond apres coup. -->
+  <video id="slideVideo" muted playsinline preload="none" src="assets/%5BStart%20project%5D%20video%20slide.mp4"></video>
   <div id="domePhoto"></div>
   <div id="contactOverlay">
     <form id="projectForm" novalidate>
@@ -623,10 +629,10 @@ const loaderPct = document.getElementById('loaderPct');
 const ASSET_BUST = Date.now();
 const audioAsset = (name) => new Audio('assets/' + encodeURIComponent(name) + '?v=' + ASSET_BUST);
 
-const sfxTyping = audioAsset('Typing intro .wav');
+const sfxTyping = audioAsset('Typing intro.m4a');
 sfxTyping.loop = true; // couvre toute la durée du chargement quel que soit le moment du clic
-const sfx100 = audioAsset('100% sound .wav');
-const sfxEnter = audioAsset('[enter] button.wav');
+const sfx100 = audioAsset('100pct sound.m4a');
+const sfxEnter = audioAsset('enter button.m4a');
 const loopMain = audioAsset('Loop music main 2 .mp3');
 loopMain.loop = true;
 const effectSlide = audioAsset('Effect sliding dome .mp3');
@@ -896,6 +902,15 @@ document.getElementById('enter').addEventListener('click', () => {
   sfxEnter.play().catch(() => {});
   loopMain.currentTime = 0;
   loopMain.play().catch(() => {});
+
+  // vA a fini de faire son travail critique (premiere image) : vB peut charger
+  // maintenant, il a toute la duree du premier passage de vA pour arriver a temps.
+  vB.preload = 'auto';
+  vB.load();
+  // filet pour les visiteurs qui ne survolent/touchent jamais le bouton "Start a project" :
+  // on precharge quand meme la video du studio, mais seulement apres coup et donc sans
+  // jamais retarder ce qui compte pour le premier affichage.
+  setTimeout(preloadSlideVideo, 5000);
 });
 
 /* ---- CTA "Start a project" : on entre dans le studio (vidéo) -> photo floutée -> contact ---- */
@@ -906,7 +921,22 @@ const domePhoto = document.getElementById('domePhoto');
 const contactOverlay = document.getElementById('contactOverlay');
 const closeContact = document.getElementById('closeContact');
 
+// precharge la video du studio (22 Mo) des le premier signal d'intention -
+// survol/focus clavier en desktop, touch en mobile - plutot que d'attendre le clic,
+// qui forcerait sinon le visiteur a regarder un ecran fige le temps du buffering.
+let slidePreloadStarted = false;
+function preloadSlideVideo() {
+  if (slidePreloadStarted) return;
+  slidePreloadStarted = true;
+  slideVideo.preload = 'auto';
+  slideVideo.load();
+}
+startBtn.addEventListener('mouseenter', preloadSlideVideo);
+startBtn.addEventListener('focus', preloadSlideVideo);
+startBtn.addEventListener('touchstart', preloadSlideVideo, { passive: true });
+
 startBtn.addEventListener('click', () => {
+  preloadSlideVideo(); // filet si le clic arrive sans survol/touch prealable (ex: activation clavier)
   // musique : on coupe la principale, on joue l'effet d'entrée UNE fois
   loopMain.pause();
   musicDome.pause(); musicDome.currentTime = 0;
