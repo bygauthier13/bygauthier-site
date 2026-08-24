@@ -745,11 +745,6 @@ function scrambleReveal(el, text, { duration = 4200, scramblePhase = 0.16 } = {}
   requestAnimationFrame(frame);
 }
 
-/* lancement de l'effet sur le message de chargement (dès l'ouverture, le temps de lire) */
-const loaderTitle = document.getElementById('loaderTitle');
-const loaderFullText = loaderTitle.textContent;
-scrambleReveal(loaderTitle, loaderFullText, { duration: 5200 });
-
 /* ---- Act 1 : loader, 7.5s (5s +50% pour laisser le temps de lire le message) ---- */
 const gateTagline = document.getElementById('gateTagline');
 const gateTaglineText = gateTagline.textContent;
@@ -1046,7 +1041,7 @@ const projectForm = document.getElementById('projectForm');
 const PLACEHOLDERS = [
   "We're opening a boutique hotel in Dubai and need a signature sound for the guest journey…",
   "I publish luxury property reels every day and I'm looking for original commercial-quality music.",
-  "I want my website to look and sound unique.",
+  "I want my website to sound unique.",
 ];
 let phIndex = 0;
 pfMessage.placeholder = PLACEHOLDERS[0];
