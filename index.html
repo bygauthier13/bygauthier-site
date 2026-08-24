@@ -449,6 +449,13 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   #ctaWrap { bottom: var(--space-md); }
   #startProject { font-size: 0.72rem; letter-spacing: 0.18em; text-indent: 0.18em; padding: 0.85em 1.9em; white-space: nowrap; }
   #muteToggle { top: calc(var(--space-md) + 1.9rem); right: var(--space-md); font-size: 0.55rem; letter-spacing: 0.18em; }
+  /* le switch SOUND (fixed, z-index 30, coin haut-droit) reste affiche par-dessus le
+     formulaire de contact ("reste dispo dans le dôme"). #contactOverlay centre son contenu
+     verticalement (justify-content:center) : un margin-top sur #projectForm se fait juste
+     absorber par ce centrage plutot que de pousser le titre vers le bas. La bonne prise,
+     c'est le titre lui-meme : sur mobile il est assez large pour passer sous le switch, donc
+     on lui reserve de l'espace a droite pour qu'il passe a la ligne avant d'y arriver. */
+  #projectForm .pf-heading { padding-right: 4.6rem; }
 }
 </style>
 </head>
