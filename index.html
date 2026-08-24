@@ -75,28 +75,6 @@ a { color: inherit; }
 }
 .loader-pct { margin-top: 14px; font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.55); }
 
-/* bouton "click for sound" : c'est le geste utilisateur qui déverrouille l'audio
-   (les navigateurs bloquent tout son tant que la page n'a pas été cliquée) */
-#soundPrompt {
-  margin-top: 30px; font-family: var(--font-mono); font-size: 0.72rem;
-  letter-spacing: 0.26em; text-indent: 0.26em; text-transform: uppercase;
-  color: var(--neon-hot); background: none; border: 1px solid rgba(255,138,61,0.55);
-  border-radius: 999px; padding: 0.85em 2.1em; cursor: pointer;
-  text-shadow: 0 0 8px rgba(255,176,102,0.7);
-  box-shadow: 0 0 16px rgba(255,138,61,0.28), inset 0 0 10px rgba(255,138,61,0.08);
-  animation: soundPulse 1.9s ease-in-out infinite;
-  transition: opacity 550ms var(--ease-in-out), transform 550ms var(--ease-out), color 300ms, border-color 300ms;
-}
-#soundPrompt:hover { color: #fff; border-color: var(--neon-hot); }
-#soundPrompt:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
-#soundPrompt.is-done {
-  animation: none; opacity: 0; transform: scale(0.94); pointer-events: none;
-}
-@keyframes soundPulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(255,138,61,0.28), inset 0 0 10px rgba(255,138,61,0.08); }
-  50%      { box-shadow: 0 0 30px rgba(255,138,61,0.55), inset 0 0 16px rgba(255,138,61,0.16); }
-}
-
 /* ---- Act 2 · Gate — mêmes codes couleur que le loader (--bg-dark, --neon/--neon-hot) ---- */
 #gate { background: var(--bg-dark); opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-in-out); }
 #gate.is-on { opacity: 1; visibility: visible; }
@@ -239,6 +217,22 @@ a { color: inherit; }
   transition: color 300ms, border-color 300ms, text-shadow 300ms;
 }
 .cta-email:hover { color: #fff; border-color: var(--neon-hot); text-shadow: 0 0 10px rgba(255,176,102,0.8); }
+
+/* icone Instagram, meme traitement neon orange que le reste du site (glow en couches,
+   translate de .neon/text-shadow vers filter:drop-shadow puisque text-shadow n'affecte
+   pas un SVG). Une seule classe partagee entre la page principale et le formulaire. */
+.ig-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--neon-hot); pointer-events: auto;
+  filter: drop-shadow(0 0 4px var(--neon-hot)) drop-shadow(0 0 11px var(--neon)) drop-shadow(0 0 22px rgba(255,122,42,0.5));
+  transition: filter 300ms, color 300ms, transform 300ms var(--ease-out);
+}
+.ig-link svg { width: 20px; height: 20px; display: block; }
+.ig-link:hover {
+  color: #fff; transform: scale(1.1);
+  filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px var(--neon-hot)) drop-shadow(0 0 28px rgba(255,122,42,0.6));
+}
+.ig-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 4px; }
 #startProject {
   font-family: var(--font-mono); font-size: 1rem; font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em;
   text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,0.4);
@@ -535,6 +529,13 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 <div id="ctaWrap">
   <button id="startProject">[ Start a project ]</button>
   <a class="cta-email" href="mailto:hello@bygauthier.com">hello@bygauthier.com</a>
+  <a class="ig-link" href="https://www.instagram.com/musicbygauthier/" target="_blank" rel="noopener noreferrer" aria-label="byGauthier on Instagram">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+      <rect x="3" y="3" width="18" height="18" rx="5.5"/>
+      <circle cx="12" cy="12" r="4.2"/>
+      <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  </a>
 </div>
 
 <!-- Flux "Start a project" : vidéo d'entrée -> photo floutée -> reveal contact -->
@@ -577,6 +578,13 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
       <button type="submit" class="pf-send" id="pfSend">[ Send ]</button>
       <div class="pf-status" id="pfStatus" role="status" aria-live="polite"></div>
       <div class="pf-email">Prefer email? <a href="mailto:hello@bygauthier.com">hello@bygauthier.com</a></div>
+      <a class="ig-link" style="align-self: center;" href="https://www.instagram.com/musicbygauthier/" target="_blank" rel="noopener noreferrer" aria-label="byGauthier on Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+          <rect x="3" y="3" width="18" height="18" rx="5.5"/>
+          <circle cx="12" cy="12" r="4.2"/>
+          <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
     </form>
 
     <!-- etat de confirmation : remplace le formulaire une fois l'envoi confirme par Formspree -->
@@ -607,7 +615,6 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 Every composition is yours alone, with 100% commercial ownership.</div>
     <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
     <div class="loader-pct" id="loaderPct">0%</div>
-    <button id="soundPrompt" type="button">[ Click for sound ]</button>
   </div>
 </section>
 
@@ -639,8 +646,6 @@ const loaderPct = document.getElementById('loaderPct');
 const ASSET_BUST = Date.now();
 const audioAsset = (name) => new Audio('assets/' + encodeURIComponent(name) + '?v=' + ASSET_BUST);
 
-const sfxTyping = audioAsset('Typing intro.m4a');
-sfxTyping.loop = true; // couvre toute la durée du chargement quel que soit le moment du clic
 const sfx100 = audioAsset('100pct sound.m4a');
 const sfxEnter = audioAsset('enter button.m4a');
 const loopMain = audioAsset('Loop music main 2 .mp3');
@@ -663,41 +668,8 @@ function unlockAudio() {
 document.addEventListener('pointerdown', unlockAudio, { once: true });
 document.addEventListener('keydown', unlockAudio, { once: true });
 
-/* ---- bouton [Click for sound] du loader : le geste qui autorise l'audio ----
-   il lance la frappe au clavier, qui tourne jusqu'à l'arrivée du son "100%". */
-const soundPrompt = document.getElementById('soundPrompt');
-let typingStarted = false;
-soundPrompt.addEventListener('click', () => {
-  unlockAudio();
-  typingStarted = true;
-  sfxTyping.currentTime = 0;
-  sfxTyping.play().catch(() => {});
-  soundPrompt.classList.add('is-done');
-});
-
-/* coupe la frappe en douceur (petit fondu plutôt qu'un arrêt sec) */
-function stopTyping() {
-  if (!typingStarted) return;
-  typingStarted = false;
-  const from = sfxTyping.volume;
-  const t0 = performance.now();
-  // fondu cosmétique…
-  (function fade(now) {
-    const p = Math.min(1, ((now || performance.now()) - t0) / 260);
-    sfxTyping.volume = Math.max(0, from * (1 - p));
-    if (p < 1) requestAnimationFrame(fade);
-  })(t0);
-  // …mais l'arrêt lui-même est garanti par un timer : si l'onglet passe en arrière-plan,
-  // requestAnimationFrame est gelé et le fondu seul ne couperait jamais le son.
-  setTimeout(() => {
-    sfxTyping.pause();
-    sfxTyping.currentTime = 0;
-    sfxTyping.volume = from;
-  }, 300);
-}
-
 /* ---- switch NEON on/off : coupe / rétablit toute la musique + les effets ---- */
-const allAudio = [sfxTyping, sfx100, sfxEnter, loopMain, effectSlide, musicDome];
+const allAudio = [sfx100, sfxEnter, loopMain, effectSlide, musicDome];
 const muteToggle = document.getElementById('muteToggle');
 let soundOn = true;
 function applyMute() {
@@ -756,7 +728,6 @@ gsap.to({ p: 0 }, {
     loaderPct.textContent = Math.round(v) + '%';
   },
   onComplete() {
-    stopTyping();               // la frappe s'arrête pile quand le "100%" arrive
     sfx100.currentTime = 0;
     sfx100.play().catch(() => {});
     loaderEl.classList.add('is-gone');
