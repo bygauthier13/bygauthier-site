@@ -613,13 +613,16 @@ Every composition is yours alone, with 100% commercial ownership.</div>
 
 <script type="importmap">
 { "imports": {
-  "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
-  "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
 } }
 </script>
 <script type="module">
 import gsap from 'gsap';
-import * as THREE from 'three';
+/* Three.js a ete retire (24/08/2026) : le shader d'entree n'utilisait que 5 primitives
+   de base (quad plein ecran + material + renderer) sur toute la bibliotheque. Vu au
+   throttling Slow 4G : 1,27 Mo de JS non minifie telecharge depuis unpkg.com pour un
+   flash d'1s au clic Enter. Remplace par du WebGL brut ci-dessous (runEnterShader),
+   memes shaders GLSL, meme rendu, zero dependance externe. */
 
 const loaderEl = document.getElementById('loader');
 const gateEl = document.getElementById('gate');
@@ -802,7 +805,8 @@ vB.addEventListener('ended', swap);
 function runEnterShader(durationMs = 1000) {
   const container = document.getElementById('enterFx');
   const vertexShader = `
-    void main() { gl_Position = vec4( position, 1.0 ); }
+    attribute vec2 position;
+    void main() { gl_Position = vec4( position, 0.0, 1.0 ); }
   `;
   const fragmentShader = `
     precision highp float;
@@ -821,34 +825,64 @@ function runEnterShader(durationMs = 1000) {
       gl_FragColor = vec4(color[0], color[1], color[2], 1.0);
     }
   `;
-  const camera = new THREE.Camera(); camera.position.z = 1;
-  const scene = new THREE.Scene();
-  const uniforms = { time: { value: 1.0 }, resolution: { value: new THREE.Vector2() } };
-  const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
-  scene.add(mesh);
+  // quad plein ecran (2 triangles, clip space) : tout ce que le shader a besoin de
+  // parcourir, pas de camera/scene/mesh/materiau necessaires pour un cas aussi simple.
+  const canvas = document.createElement('canvas');
+  const dpr = Math.min(devicePixelRatio, 2);
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  container.appendChild(canvas);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setSize(innerWidth, innerHeight);
-  container.appendChild(renderer.domElement);
-  uniforms.resolution.value.set(renderer.domElement.width, renderer.domElement.height);
+  // preserveDrawingBuffer : sans ca, le navigateur est libre de vider le framebuffer
+  // juste apres chaque composition d'image (comportement WebGL normal, invisible a
+  // l'oeil puisque le rAF redessine juste avant chaque affichage) — mais ca rend le
+  // buffer illisible depuis l'exterieur de la boucle de rendu (ex: capture d'ecran
+  // d'outillage). Cout negligeable pour un quad plein ecran aussi simple.
+  const gl = canvas.getContext('webgl', { antialias: true, preserveDrawingBuffer: true });
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexShader));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentShader));
+  gl.linkProgram(program);
+  gl.useProgram(program);
+
+  const positions = new Float32Array([-1, -1, 3, -1, -1, 3]); // triangle unique qui couvre tout l'ecran
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+  const posLoc = gl.getAttribLocation(program, 'position');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  const timeLoc = gl.getUniformLocation(program, 'time');
+  const resLoc = gl.getUniformLocation(program, 'resolution');
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform2f(resLoc, canvas.width, canvas.height);
 
   container.classList.add('is-on');
-  let raf, running = true;
+  let raf, running = true, time = 1.0;
   (function animate() {
     if (!running) return;
     raf = requestAnimationFrame(animate);
-    uniforms.time.value += 0.05;
-    renderer.render(scene, camera);
+    time += 0.05;
+    gl.uniform1f(timeLoc, time);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
   })();
 
   setTimeout(() => {
     container.classList.remove('is-on'); // fade out (CSS transition 550ms) en révélant le hero dessous
     setTimeout(() => {
       running = false; cancelAnimationFrame(raf);
-      container.removeChild(renderer.domElement);
-      renderer.dispose(); mesh.geometry.dispose(); material.dispose();
+      container.removeChild(canvas);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
     }, 600);
   }, durationMs);
 }
