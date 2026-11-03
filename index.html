@@ -644,7 +644,9 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
 
 @media (max-width: 760px) {
   .top-email { font-size: 0.6rem; letter-spacing: 0.14em; }
-  #topSocial { top: calc(var(--space-md) + 3.3rem); right: var(--space-md); gap: 0.85rem; }
+  /* pas de son sur mobile : plus de switch SOUND, les icones prennent sa place */
+  #muteToggle { display: none !important; }
+  #topSocial { top: calc(var(--space-md) + 2rem); right: var(--space-md); gap: 0.85rem; }
   #topSocial .ig-link svg { width: 22px; height: 22px; }
   #projectForm .pf-heading-accent { font-size: 0.5em; letter-spacing: 0.16em; }
 }
@@ -973,6 +975,19 @@ muteToggle.addEventListener('click', () => {
   soundOn = !soundOn;
   applyMute();
 });
+
+/* ---- mobile : pas de son du tout (choix de Gauthier). Meme seuil que la mise en page mobile.
+   Les sons ne sont meme pas telecharges : play() devient un no-op, plus de source. ---- */
+const NO_SOUND = matchMedia('(max-width: 760px)').matches;
+if (NO_SOUND) {
+  soundOn = false;
+  allAudio.forEach((a) => {
+    a.muted = true;
+    a.preload = 'none';
+    a.removeAttribute('src');
+    a.play = () => Promise.resolve();
+  });
+}
 
 /* ---- effet "SpecialText" (scramble -> décodage) porté en vanilla JS ----
    phase 1 : brouillage complet ; phase 2 : révélation gauche->droite avec un curseur "_",
