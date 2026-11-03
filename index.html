@@ -544,6 +544,26 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 .ob-shows:hover .oa-poster img { filter: none; }
 .ob-shows:hover .oa-poster::after { opacity: 0.3; }
 
+/* sticker de nomination K-pop : badge neon, l'anneau de texte tourne doucement */
+.oa-award { flex: 0 0 auto; width: 84px; height: 84px; margin: -6px 0; overflow: visible; transform: rotate(-10deg); filter: drop-shadow(0 0 6px rgba(255,138,61,0.55)); }
+.oa-award__outer { fill: rgba(10,7,5,0.65); stroke: var(--neon-hot); stroke-width: 1.6; }
+.oa-award__inner { fill: none; stroke: rgba(255,176,102,0.55); stroke-width: 1; stroke-dasharray: 2 3; }
+.oa-award__spin { transform-box: view-box; transform-origin: 60px 60px; animation: oaSpin 28s linear infinite; }
+.oa-award__ring { fill: var(--neon-hot); font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; }
+.oa-award__star { fill: #fff; font-size: 20px; }
+.oa-award__k { fill: #fff; font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: 0.5px; }
+@keyframes oaSpin { to { transform: rotate(360deg); } }
+/* le bloc K-pop est un lien vers l'article allkpop sur Keyvitup */
+a.ob-kpop { text-decoration: none; color: inherit; cursor: pointer; }
+a.ob-kpop .oa-arrow { display: inline-block; color: var(--neon-hot); transition: transform 300ms var(--ease-out); }
+a.ob-kpop .oa-title { transition: color 300ms; }
+a.ob-kpop:hover .oa-title { color: var(--neon-hot); }
+a.ob-kpop:hover .oa-arrow { transform: translate(2px, -2px); }
+a.ob-kpop:hover .oa-award { filter: drop-shadow(0 0 10px rgba(255,138,61,0.85)); }
+a.ob-kpop:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 4px; }
+@media (max-width: 760px) { .oa-award { width: 58px; height: 58px; margin: 0; } }
+@media (prefers-reduced-motion: reduce) { .oa-award__spin { animation: none; } }
+
 body.project-mode #onAir { opacity: 0 !important; pointer-events: none; }
 
 /* on retire d'abord les series, puis la K-pop, puis la portee : marques + 2,000+ restent toujours */
@@ -774,14 +794,22 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
     </div>
     <span class="oa-sep ob-sep-reach" aria-hidden="true"></span>
     <div class="ob-block ob-reach">
-      <span class="oa-big neon">64</span>
-      <span class="oa-meta"><span class="oa-kicker">Broadcasters &amp; platforms</span><span class="oa-title">24 countries</span><span class="oa-sub">TV · streaming · radio</span></span>
+      <span class="oa-big neon">200K+</span>
+      <span class="oa-meta"><span class="oa-kicker">Records</span><span class="oa-title">Physical records sold</span><span class="oa-sub">Sony Music project</span></span>
     </div>
     <span class="oa-sep ob-sep-kpop" aria-hidden="true"></span>
-    <div class="ob-block ob-kpop">
-      <span class="oa-big neon">Top 5</span>
-      <span class="oa-meta"><span class="oa-kicker">Keyvitup · 2026</span><span class="oa-title">New K-pop boy group</span><span class="oa-sub">Artist project</span></span>
-    </div>
+    <a class="ob-block ob-kpop" href="https://www.allkpop.com/article/2026/03/inkodes-first-boy-group-keyvitup-unveils-striking-visuals-in-new-individual-concept-photos-for-debut" target="_blank" rel="noopener noreferrer" aria-label="Keyvitup, Global K-pop Revelation 2026 nominee, produced by byGauthier (article on allkpop)">
+      <!-- sticker de nomination : anneau de texte qui tourne lentement, neon ambre -->
+      <svg class="oa-award" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <defs><path id="oaAwardRing" d="M 60,60 m -46,0 a 46,46 0 1,1 92,0 a 46,46 0 1,1 -92,0"/></defs>
+        <circle class="oa-award__outer" cx="60" cy="60" r="57"/>
+        <g class="oa-award__spin"><text class="oa-award__ring"><textPath href="#oaAwardRing" textLength="286" lengthAdjust="spacing">AWARD NOMINEE · 2026 · AWARD NOMINEE · 2026 ·</textPath></text></g>
+        <circle class="oa-award__inner" cx="60" cy="60" r="35"/>
+        <text class="oa-award__star" x="60" y="57" text-anchor="middle">★</text>
+        <text class="oa-award__k" x="60" y="76" text-anchor="middle">K-POP</text>
+      </svg>
+      <span class="oa-meta"><span class="oa-kicker">Keyvitup · Award nominee 2026</span><span class="oa-title">Global K-pop Revelation</span><span class="oa-sub">Produced byGauthier <span class="oa-arrow">↗</span></span></span>
+    </a>
     <span class="oa-sep ob-sep-shows" aria-hidden="true"></span>
     <div class="ob-block ob-shows">
       <span class="ob-stack" aria-hidden="true">
@@ -1192,6 +1220,7 @@ const obTrack = document.getElementById('obTrack');
 const obLoop = obTrack.firstElementChild.cloneNode(true);
 obLoop.classList.add('ob-set--loop');
 obLoop.setAttribute('aria-hidden', 'true');
+obLoop.querySelectorAll('a').forEach((a) => { a.tabIndex = -1; }); // copie decorative : hors navigation clavier
 obTrack.appendChild(obLoop);
 function tuneOnAirSpeed() {
   // vitesse de lecture constante (~38 px/s) quelle que soit la largeur du jeu
