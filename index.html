@@ -254,7 +254,7 @@ a { color: inherit; }
 .credit-box {
   max-width: 15.5rem; padding: 0.85em 1.05em;
   border: 1px solid rgba(255,176,102,0.35); border-radius: 10px;
-  background: rgba(10,7,5,0.42); backdrop-filter: blur(6px);
+  background: rgba(10,7,5,0.66); /* pas de backdrop-filter : flou recalcule a chaque image de la video, saccades sous Safari */
   font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.65;
   opacity: 0; transform: translateY(14px) scale(0.95); filter: blur(6px);
 }
@@ -283,7 +283,7 @@ a { color: inherit; }
    pas au dimensionnement — sans width la box se rétracterait autour du seul titre et le
    texte déborderait par-dessus la box suivante. */
 .credit-box.cb-reviews { width: 16rem; max-width: 16rem; text-align: left; }
-.cb-quote-wrap { position: relative; min-height: 5.6rem; margin-top: 8px; }
+.cb-quote-wrap { position: relative; min-height: 7.6rem; margin-top: 8px; }
 .cb-quote {
   position: absolute; inset: 0;
   text-transform: none; letter-spacing: 0.01em; line-height: 1.55;
@@ -427,7 +427,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   /* avis + marques compactés pour tenir dans la colonne mobile */
   .cb-link { font-size: 0.45rem; margin-top: 5px; letter-spacing: 0.08em; }
   .cb-stars { font-size: 0.5rem; letter-spacing: 0.16em; }
-  .cb-quote-wrap { min-height: 5.2rem; margin-top: 5px; }
+  .cb-quote-wrap { min-height: 7.2rem; margin-top: 5px; }
   .cb-quote { font-size: 0.5rem; line-height: 1.45; }
   .cb-quote .cb-author { font-size: 0.45rem; margin-top: 4px; }
   #creditsRight .cb-brands { justify-content: flex-start; }
@@ -461,8 +461,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 #onAir {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; height: var(--onair-h);
   display: flex; align-items: stretch;
-  background: linear-gradient(180deg, rgba(10,7,5,0.5) 0%, rgba(10,7,5,0.88) 100%);
-  backdrop-filter: blur(10px) saturate(1.15); -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  background: linear-gradient(180deg, rgba(10,7,5,0.7) 0%, rgba(10,7,5,0.92) 100%); /* opaque, sans flou : plus fluide */
   border-top: 1px solid rgba(255,176,102,0.42);
   box-shadow: 0 -12px 40px rgba(255,122,42,0.08);
   transform: translateY(102%); opacity: 0;
@@ -563,6 +562,11 @@ a.ob-kpop:hover .oa-award { filter: drop-shadow(0 0 10px rgba(255,138,61,0.85));
 a.ob-kpop:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 4px; }
 @media (max-width: 760px) { .oa-award { width: 58px; height: 58px; margin: 0; } }
 @media (prefers-reduced-motion: reduce) { .oa-award__spin { animation: none; } }
+
+/* box "trusted" : meme largeur que les testimonials, une seule phrase */
+#creditsLeft .credit-box { width: 15.5rem; } /* certification + confiance : meme largeur */
+.credit-box.cb-trusted .cb-title { font-size: 0.7rem; line-height: 1.55; }
+@media (max-width: 760px) { #creditsLeft .credit-box { width: 100%; } .credit-box.cb-trusted .cb-title { font-size: 0.52rem; } }
 
 body.project-mode #onAir { opacity: 0 !important; pointer-events: none; }
 
@@ -686,7 +690,7 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
   <!-- vA se charge en priorite (premiere chose visible). vB (retour de la boucle) attend
        d'etre declenche en JS juste apres Enter, pour ne pas se battre pour la bande passante
        avec vA sur une connexion lente -->
-  <video id="vA" muted playsinline preload="auto" poster="assets/img/dome-poster.jpg"></video>
+  <video id="vA" muted playsinline loop preload="auto" poster="assets/img/dome-poster.jpg"></video>
   <video id="vB" muted playsinline preload="none"></video>
 </div>
 <script>
@@ -704,8 +708,10 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
   if (/3g/.test(type)) tier = 720;
   window.BYG_VIDEO = { tier: tier, off: off };
   if (off) return;
-  document.getElementById('vA').src = 'assets/video/dome-' + tier + '.mp4';
-  document.getElementById('vB').src = 'assets/video/dome-rev-' + tier + '.mp4';
+  // Un seul fichier aller + retour (12 s) lu en boucle native : la derniere image est la
+  // premiere, donc pas de couture. Avant, deux videos se relayaient toutes les 6 s et Safari
+  // figeait l'image le temps de relancer l'autre. vB reste vide, 'ended' ne se declenche plus.
+  document.getElementById('vA').src = 'assets/video/dome-loop-' + tier + '.mp4';
 })();
 </script>
 
@@ -731,11 +737,9 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
   </div>
 </div>
 
-<!-- credit boxes : gauche (les 3 preuves "chiffres / certification / labels") -->
+<!-- credit boxes : gauche = certification Muso + phrase de confiance ; droite = avis clients.
+     Marques, labels et chiffres sont detailles dans le bandeau ON AIR du bas. -->
 <div id="creditsLeft">
-  <div class="credit-box" id="cl1">
-    <div class="cb-title">+200k physical albums sold</div>
-  </div>
   <div class="credit-box" id="cl2">
     <div class="cb-title">Certified top 10% producer worldwide</div>
     <div class="cb-sub">by Muso Global Ent.</div>
@@ -743,30 +747,16 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
        href="https://credits.muso.ai/profile/d2bb7542-8db0-4cf1-8c53-a1ff4aff4716"
        target="_blank" rel="noopener noreferrer">[ Verify on muso.ai → ]</a>
   </div>
-  <div class="credit-box" id="cl3">
-    <div class="cb-title">Major-label credits</div>
-    <div class="cb-sub">Sony · Universal</div>
+  <div class="credit-box cb-trusted" id="cr2">
+    <div class="cb-title">Trusted by global brands<br>&amp; major labels</div>
   </div>
 </div>
 
-<!-- credit boxes : droite (avis clients qui défilent + marques) -->
 <div id="creditsRight">
   <div class="credit-box cb-reviews" id="cr1">
     <div class="cb-title">Testimonials</div>
     <div class="cb-stars">★★★★★</div>
     <div class="cb-quote-wrap" id="reviewsWrap"></div>
-  </div>
-  <div class="credit-box" id="cr2">
-    <div class="cb-title">Trusted by global brands</div>
-    <div class="cb-brands">
-      <span class="brand b-netflix">Netflix</span>
-      <span class="brand b-fs">Four Seasons</span>
-      <span class="brand b-adidas">adidas</span>
-      <span class="brand b-bbc">BBC One</span>
-      <span class="brand b-qatar">Qatar 2022</span>
-      <span class="brand b-hbo">HBO</span>
-      <span class="brand b-more">&amp; many more</span>
-    </div>
   </div>
 </div>
 
@@ -1157,7 +1147,7 @@ function runEnterShader(durationMs = 1000) {
 
 /* ---- cascade d'apparition des credit boxes (une après l'autre, une fois la page chargée) ---- */
 function revealCredits() {
-  ['cl1', 'cr1', 'cl2', 'cr2', 'cl3'].forEach((id, i) => {
+  ['cl2', 'cr1', 'cr2'].forEach((id, i) => {
     setTimeout(() => document.getElementById(id).classList.add('pop'), 1200 + i * 430);
   });
 }
@@ -1174,7 +1164,7 @@ const REVIEWS = [
 ];
 /* la box a été réduite pour ne plus cacher le dôme en mobile : les avis trop longs
    sont coupés à la limite d'un mot et terminés par "{…}" plutôt que débordés. */
-const QUOTE_MAX_CHARS = 100;
+const QUOTE_MAX_CHARS = 150;
 function truncateQuote(text) {
   if (text.length <= QUOTE_MAX_CHARS) return text;
   const cut = text.slice(0, QUOTE_MAX_CHARS);
@@ -1335,10 +1325,6 @@ document.getElementById('enter').addEventListener('click', () => {
   loopMain.currentTime = 0;
   loopMain.play().catch(() => {});
 
-  // vA a fini de faire son travail critique (premiere image) : vB peut charger
-  // maintenant, il a toute la duree du premier passage de vA pour arriver a temps.
-  vB.preload = 'auto';
-  vB.load();
   // la video "Start a project" ne se charge plus d'office : seulement au survol / toucher
   // du bouton (preloadSlideVideo), pour ne rien couter aux visiteurs qui ne cliquent pas.
 });
