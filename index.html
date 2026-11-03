@@ -337,7 +337,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 #slideVideo.is-hidden { opacity: 0; }
 #domePhoto {
   position: absolute; inset: 0;
-  background: url('assets/Photo%20dans%20le%20dome.jpg') center/cover no-repeat;
+  background: url('assets/img/dome-photo.jpg') center/cover no-repeat;
   filter: blur(28px) brightness(0.48); transform: scale(1.12);
   opacity: 0; transition: opacity 900ms ease;
 }
@@ -451,6 +451,212 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
      on lui reserve de l'espace a droite pour qu'il passe a la ligne avant d'y arriver. */
   #projectForm .pf-heading { padding-right: 4.6rem; }
 }
+
+/* ---- ON AIR : bandeau fixe en bas de l'ecran du studio ----
+   Rien ne defile : tout se lit d'un coup d'oeil. Marques et chiffres d'abord (ce qu'un
+   head of brand regarde), les series en appui. Le CTA de repli et les boxes mobiles
+   remontent de la hauteur du bandeau. Les marques sont du texte, aucun fichier de logo. */
+:root { --onair-h: 112px; }
+#ctaWrap { bottom: calc(var(--onair-h) + var(--space-md)); }
+#onAir {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; height: var(--onair-h);
+  display: flex; align-items: stretch;
+  background: linear-gradient(180deg, rgba(10,7,5,0.5) 0%, rgba(10,7,5,0.88) 100%);
+  backdrop-filter: blur(10px) saturate(1.15); -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  border-top: 1px solid rgba(255,176,102,0.42);
+  box-shadow: 0 -12px 40px rgba(255,122,42,0.08);
+  transform: translateY(102%); opacity: 0;
+  transition: transform 1100ms var(--ease-out), opacity 700ms var(--ease-in-out);
+}
+#onAir.is-on { transform: none; opacity: 1; }
+/* lignes de balayage CRT, a peine visibles */
+#onAir::before {
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,214,180,0.035) 0 1px, transparent 1px 3px);
+}
+/* faisceau qui parcourt le filet du haut */
+#onAir::after {
+  content: ''; position: absolute; top: -1px; left: 0; width: 22%; height: 1px; z-index: 5; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--neon-hot), #fff, var(--neon-hot), transparent);
+  box-shadow: 0 0 10px var(--neon), 0 0 22px var(--neon);
+  animation: onairSweep 6s linear infinite;
+}
+@keyframes onairSweep { from { transform: translateX(-100%); } to { transform: translateX(460%); } }
+
+/* l'onglet "ON AIR" : le bug de chaine, plein neon, bord biseaute */
+.onair-tag {
+  position: relative; z-index: 3; flex: 0 0 auto;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  padding: 0 2.9rem 0 var(--space-lg);
+  background: var(--neon); color: #0a0705;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%);
+  font-family: var(--font-mono); text-transform: uppercase;
+}
+.onair-live { display: flex; align-items: center; gap: 0.6em; font-size: 0.58rem; font-weight: 500; letter-spacing: 0.32em; }
+.onair-live i { width: 7px; height: 7px; border-radius: 50%; background: #0a0705; animation: onairBlink 1.4s steps(1) infinite; }
+@keyframes onairBlink { 50% { opacity: 0.15; } }
+.onair-num { font-family: var(--font-display); font-size: 2.3rem; font-weight: 800; line-height: 0.92; letter-spacing: -0.02em; }
+.onair-cap { font-size: 0.5rem; font-weight: 500; letter-spacing: 0.16em; line-height: 1.4; }
+
+/* le tableau : marques (2 rangees) | portee | K-pop | series */
+.onair-board {
+  position: relative; z-index: 3; flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+  padding: 0 var(--space-lg) 0 2.2rem;
+}
+.ob-block { flex: 0 0 auto; display: flex; align-items: center; gap: 0.95rem; white-space: nowrap; }
+.ob-brands { flex-direction: column; align-items: flex-start; gap: 9px; }
+.oa-sep { flex: 0 0 auto; width: 1px; height: 48%; background: linear-gradient(transparent, rgba(255,176,102,0.55), transparent); }
+.oa-meta { display: flex; flex-direction: column; gap: 3px; font-family: var(--font-mono); text-transform: uppercase; }
+.oa-kicker { font-family: var(--font-mono); text-transform: uppercase; font-size: 0.54rem; letter-spacing: 0.22em; color: var(--neon-hot); text-shadow: 0 0 7px rgba(255,176,102,0.6); }
+.oa-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: #fff; text-shadow: 0 0 6px rgba(255,255,255,0.4); }
+.oa-sub { font-size: 0.55rem; letter-spacing: 0.14em; color: rgba(255,214,180,0.62); }
+.oa-big { font-family: var(--font-display); font-size: 2.7rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+
+/* marques : mur de wordmarks neon, 4 par rangee */
+.oa-brands { display: grid; grid-template-columns: repeat(4, auto); align-items: center; justify-items: start; gap: 10px 1.6rem; }
+.oa-brand { font-family: var(--font-display); font-size: 1.22rem; line-height: 1; color: #fff; text-shadow: 0 0 5px #fff, 0 0 12px var(--neon-hot), 0 0 26px rgba(255,138,61,0.5); }
+.oa-b-netflix { font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.oa-b-adidas  { font-weight: 700; letter-spacing: -0.03em; text-transform: lowercase; }
+.oa-b-fifa    { font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.98rem; }
+.oa-b-fifa small { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 0.44rem; letter-spacing: 0.24em; color: var(--neon-hot); text-shadow: 0 0 7px rgba(255,176,102,0.6); }
+.oa-b-bbc     { font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; font-size: 1.02rem; }
+.oa-b-sky     { font-weight: 800; letter-spacing: -0.04em; text-transform: lowercase; font-size: 1.42rem; }
+.oa-b-disney  { font-weight: 500; letter-spacing: -0.01em; }
+.oa-b-tiktok  { font-weight: 700; letter-spacing: -0.02em; }
+.oa-b-hbo     { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; font-size: 1.08rem; }
+.oa-b-hbo small { font-size: 0.5em; margin-left: 0.18em; letter-spacing: 0.04em; text-transform: lowercase; font-weight: 500; }
+
+/* series : petite pile d'affiches teintees ambre, qui s'ouvre en eventail au survol */
+.ob-stack { display: flex; align-items: center; padding-left: 12px; }
+.oa-poster {
+  position: relative; flex: 0 0 auto; width: 34px; aspect-ratio: 2 / 3; overflow: hidden; border-radius: 3px;
+  margin-left: -12px; transform: rotate(var(--r, 0deg));
+  border: 1px solid rgba(255,176,102,0.5); box-shadow: 0 0 8px rgba(255,138,61,0.25), 0 4px 10px rgba(0,0,0,0.5);
+  transition: margin 420ms var(--ease-out), transform 420ms var(--ease-out);
+}
+.oa-poster img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.7) contrast(1.05) brightness(0.88); transition: filter 420ms; }
+.oa-poster::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; transition: opacity 420ms;
+  background: repeating-linear-gradient(0deg, rgba(10,7,5,0.22) 0 1px, transparent 1px 3px), linear-gradient(180deg, rgba(255,138,61,0.14), rgba(10,7,5,0.3));
+}
+.ob-shows:hover .oa-poster { margin-left: -3px; transform: rotate(0deg) translateY(-3px); }
+.ob-shows:hover .oa-poster img { filter: none; }
+.ob-shows:hover .oa-poster::after { opacity: 0.3; }
+
+body.project-mode #onAir { opacity: 0 !important; pointer-events: none; }
+
+/* on retire d'abord les series, puis la K-pop, puis la portee : marques + 2,000+ restent toujours */
+@media (max-width: 1640px) { .ob-shows, .ob-sep-shows { display: none; } }
+@media (max-width: 1320px) { .ob-kpop, .ob-sep-kpop { display: none; } }
+@media (max-width: 1100px) {
+  .onair-board { gap: 1.4rem; padding-left: 1.8rem; }
+  .oa-brands { gap: 8px 1.15rem; }
+  .oa-brand { font-size: 1rem; } .oa-b-sky { font-size: 1.15rem; } .oa-b-fifa, .oa-b-bbc, .oa-b-hbo { font-size: 0.86rem; }
+  .oa-big { font-size: 2.2rem; }
+}
+@media (max-width: 900px) { .ob-reach, .ob-sep-reach { display: none; } }
+@media (max-width: 760px) {
+  :root { --onair-h: 84px; }
+  #ctaWrap { bottom: calc(var(--onair-h) + 0.8rem); }
+  #creditsLeft, #creditsRight { bottom: calc(var(--onair-h) + 66px); }
+  .onair-tag { padding: 0 1.6rem 0 0.85rem; gap: 2px; clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
+  .onair-live { font-size: 0.46rem; letter-spacing: 0.24em; }
+  .onair-num { font-size: 1.45rem; }
+  .onair-cap { font-size: 0.4rem; letter-spacing: 0.1em; }
+  .onair-board { justify-content: center; padding: 0 0.7rem 0 0.9rem; }
+  .ob-brands .oa-kicker { display: none; }
+  .oa-brands { gap: 7px 0.85rem; }
+  .oa-brand { font-size: 0.78rem; } .oa-b-sky { font-size: 0.92rem; } .oa-b-fifa, .oa-b-bbc, .oa-b-hbo { font-size: 0.66rem; }
+  .oa-b-fifa small { font-size: 0.32rem; letter-spacing: 0.16em; margin-top: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #onAir::after, .onair-live i { animation: none !important; }
+}
+
+/* ---- email en haut, centre sur la page, a la hauteur de "////// THE STUDIO" ----
+   Revele a chaque arrivee par les "//////" (JS : revealTopContact). Position en JS
+   (layoutDomeAnchors) : centre, aligne sur THE STUDIO, ou centre sous le HUD si la place manque. */
+.tag-slashes { display: inline-block; will-change: transform; }
+#topContact {
+  position: fixed; top: 55px; left: 50%; z-index: 30; transform: translate(-50%, -50%);
+  opacity: 0; visibility: hidden; transition: opacity 500ms var(--ease-in-out), visibility 0s linear 500ms;
+}
+#topContact.is-visible { opacity: 1; visibility: visible; transition: opacity 500ms var(--ease-in-out); }
+.tc-row { display: flex; align-items: center; clip-path: inset(0 0 0 100%); }
+#topContact.is-revealed .tc-row { clip-path: inset(0 0 0 0); }
+.top-email {
+  font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(255,214,180,0.9); text-decoration: none; white-space: nowrap;
+  text-shadow: 0 0 8px rgba(255,138,61,0.5);
+  border-bottom: 1px solid rgba(255,176,102,0.35); padding-bottom: 3px;
+  transition: color 300ms, border-color 300ms, text-shadow 300ms;
+}
+.top-email:hover { color: #fff; border-color: var(--neon-hot); text-shadow: 0 0 10px rgba(255,176,102,0.8); }
+
+/* ---- LinkedIn + Instagram : en haut a droite, sous SOUND, en plus grand ---- */
+#topSocial {
+  position: fixed; top: calc(var(--space-lg) + 4.3rem); right: var(--space-lg); z-index: 30;
+  display: flex; align-items: center; gap: 1rem;
+  opacity: 0; visibility: hidden; transition: opacity 400ms var(--ease-in-out), visibility 0s linear 400ms;
+}
+#topSocial.is-visible { opacity: 1; visibility: visible; transition: opacity 400ms var(--ease-in-out); }
+#topSocial .ig-link svg { width: 26px; height: 26px; }
+body.project-mode #topContact, body.project-mode #topSocial { opacity: 0 !important; pointer-events: none; }
+body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events: none; }
+
+/* ---- [ START A PROJECT ] seul, sur la dalle d'entree du dome (position calculee en JS
+   depuis le cadrage object-fit:cover de la video ; sinon repli en bas, au-dessus du bandeau) ---- */
+#ctaWrap.is-pinned { bottom: auto; transform: translate(-50%, -50%); }
+
+/* ---- formulaire : titre en deux temps, la promesse en neon mono ---- */
+#projectForm .pf-heading { text-transform: uppercase; letter-spacing: 0.02em; }
+#projectForm .pf-heading-accent {
+  display: block; margin-top: 0.7rem;
+  font-family: var(--font-mono); font-size: 0.42em; font-weight: 500; letter-spacing: 0.22em; line-height: 1.5;
+  color: var(--neon-hot);
+  text-shadow: 0 0 4px var(--neon-hot), 0 0 11px var(--neon), 0 0 26px rgba(255,122,42,0.5);
+}
+
+@media (max-width: 760px) {
+  .top-email { font-size: 0.6rem; letter-spacing: 0.14em; }
+  #topSocial { top: calc(var(--space-md) + 3.3rem); right: var(--space-md); gap: 0.85rem; }
+  #topSocial .ig-link svg { width: 22px; height: 22px; }
+  #projectForm .pf-heading-accent { font-size: 0.5em; letter-spacing: 0.16em; }
+}
+
+/* ---- bandeau ON AIR : rail des credits ----
+   Desktop : le rail et ses copies sont transparents pour la mise en page, rien ne bouge.
+   Mobile : la place manque pour tout montrer, donc les credits defilent (2 copies du jeu,
+   -50% puis on reboucle sans couture ; vitesse reglee en JS). Toucher = pause. */
+.ob-track, .ob-set { display: contents; }
+.ob-set--loop { display: none; }
+@keyframes obScroll { to { transform: translateX(-50%); } }
+@media (max-width: 760px) {
+  .onair-board {
+    justify-content: flex-start; padding: 0; margin-left: -14px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  }
+  .ob-track { display: flex; align-items: center; height: 100%; width: max-content; animation: obScroll 40s linear infinite; }
+  .ob-track:active { animation-play-state: paused; }
+  .ob-set, .ob-set--loop { display: flex; align-items: center; height: 100%; gap: 1.4rem; padding-right: 1.4rem; }
+  .ob-reach, .ob-kpop, .ob-shows { display: flex; }
+  .ob-sep-reach, .ob-sep-kpop, .ob-sep-shows { display: block; }
+  .ob-block { gap: 0.6rem; }
+  .oa-brands { display: flex; gap: 1rem; }
+  .oa-brand { font-size: 1rem; } .oa-b-sky { font-size: 1.18rem; } .oa-b-fifa, .oa-b-bbc, .oa-b-hbo { font-size: 0.84rem; }
+  .oa-b-fifa small { font-size: 0.36rem; letter-spacing: 0.18em; }
+  .oa-big { font-size: 1.8rem; }
+  .oa-title { font-size: 0.86rem; }
+  .oa-kicker { font-size: 0.42rem; letter-spacing: 0.16em; }
+  .oa-sub { font-size: 0.42rem; letter-spacing: 0.1em; }
+  .oa-poster { width: 26px; margin-left: -9px; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .ob-track { animation: none !important; }
+  .onair-board { overflow-x: auto; }
+}
 </style>
 </head>
 <body>
@@ -460,9 +666,28 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   <!-- vA se charge en priorite (premiere chose visible). vB (retour de la boucle) attend
        d'etre declenche en JS juste apres Enter, pour ne pas se battre pour la bande passante
        avec vA sur une connexion lente -->
-  <video id="vA" muted playsinline preload="auto" src="assets/Main%20video.mp4"></video>
-  <video id="vB" muted playsinline preload="none" src="assets/Main%20video%20reverse.mp4"></video>
+  <video id="vA" muted playsinline preload="auto" poster="assets/img/dome-poster.jpg"></video>
+  <video id="vB" muted playsinline preload="none"></video>
 </div>
+<script>
+/* Taille de video selon l'ecran et la connexion (les 4K d'origine ne sont plus chargees) :
+   hauteur de film reellement affichee = cadrage object-fit:cover x densite de pixels (max 2),
+   puis la plus petite version qui suffit : 720p / 1080p / 1440p. Mobile : 1080p max.
+   3G : 720p max. Economiseur de donnees ou 2G : pas de video, l'image fixe du dome reste. */
+(function () {
+  var c = navigator.connection || {};
+  var type = c.effectiveType || '';
+  var off = c.saveData === true || /2g/.test(type);
+  var need = Math.max(innerWidth / 3852, innerHeight / 2152) * 2152 * Math.min(window.devicePixelRatio || 1, 2);
+  var tier = need <= 760 ? 720 : need <= 1140 ? 1080 : 1440;
+  if (innerWidth <= 760) tier = Math.min(tier, 1080);
+  if (/3g/.test(type)) tier = 720;
+  window.BYG_VIDEO = { tier: tier, off: off };
+  if (off) return;
+  document.getElementById('vA').src = 'assets/video/dome-' + tier + '.mp4';
+  document.getElementById('vB').src = 'assets/video/dome-rev-' + tier + '.mp4';
+})();
+</script>
 
 <!-- transition [Enter] : flash shader (lignes lumineuses), teinté ambre en CSS -->
 <div id="enterFx"></div>
@@ -482,7 +707,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   </div>
 
   <div class="hud-corner hud-tr">
-    <div class="tag">////// The Studio</div>
+    <div class="tag"><span class="tag-slashes" id="tagSlashes">//////</span> The Studio</div>
   </div>
 </div>
 
@@ -525,10 +750,71 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   </div>
 </div>
 
-<!-- CTA bas-centre -->
-<div id="ctaWrap">
-  <button id="startProject">[ Start a project ]</button>
-  <a class="cta-email" href="mailto:hello@bygauthier.com">hello@bygauthier.com</a>
+<!-- ON AIR : bandeau fixe de credits. Marques et chiffres d'abord, series en appui. -->
+<section id="onAir" aria-label="Credits: brands, platforms and broadcast reach">
+  <div class="onair-tag">
+    <span class="onair-live"><i></i>On air</span>
+    <span class="onair-num">2,000+</span>
+    <span class="onair-cap">Broadcasts &amp; streams<br>reported</span>
+  </div>
+  <div class="onair-board">
+  <div class="ob-track" id="obTrack"><div class="ob-set">
+    <div class="ob-block ob-brands">
+      <span class="oa-kicker">Brands &amp; platforms</span>
+      <div class="oa-brands">
+        <span class="oa-brand oa-b-netflix">Netflix</span>
+        <span class="oa-brand oa-b-adidas">adidas</span>
+        <span class="oa-brand oa-b-fifa">FIFA<small>World Cup 2022</small></span>
+        <span class="oa-brand oa-b-bbc">BBC</span>
+        <span class="oa-brand oa-b-sky">sky</span>
+        <span class="oa-brand oa-b-disney">Disney+</span>
+        <span class="oa-brand oa-b-tiktok">TikTok</span>
+        <span class="oa-brand oa-b-hbo">HBO<small>max</small></span>
+      </div>
+    </div>
+    <span class="oa-sep ob-sep-reach" aria-hidden="true"></span>
+    <div class="ob-block ob-reach">
+      <span class="oa-big neon">64</span>
+      <span class="oa-meta"><span class="oa-kicker">Broadcasters &amp; platforms</span><span class="oa-title">24 countries</span><span class="oa-sub">TV · streaming · radio</span></span>
+    </div>
+    <span class="oa-sep ob-sep-kpop" aria-hidden="true"></span>
+    <div class="ob-block ob-kpop">
+      <span class="oa-big neon">Top 5</span>
+      <span class="oa-meta"><span class="oa-kicker">Keyvitup · 2026</span><span class="oa-title">New K-pop boy group</span><span class="oa-sub">Artist project</span></span>
+    </div>
+    <span class="oa-sep ob-sep-shows" aria-hidden="true"></span>
+    <div class="ob-block ob-shows">
+      <span class="ob-stack" aria-hidden="true">
+        <span class="oa-poster" style="--r:-7deg"><img src="assets/credits/top-gear.jpg" alt="" decoding="async"></span>
+        <span class="oa-poster" style="--r:4deg"><img src="assets/credits/dynasty.jpg" alt="" decoding="async"></span>
+        <span class="oa-poster" style="--r:-3deg"><img src="assets/credits/match-of-the-day.jpg" alt="" decoding="async"></span>
+        <span class="oa-poster" style="--r:6deg"><img src="assets/credits/hvite-gutter.jpg" alt="" decoding="async"></span>
+        <span class="oa-poster" style="--r:-4deg"><img src="assets/credits/summer-job.jpg" alt="" decoding="async"></span>
+      </span>
+      <span class="oa-meta"><span class="oa-kicker">Heard in</span><span class="oa-title">Top Gear · Dynasty</span><span class="oa-sub">Match of the Day &amp; more</span></span>
+    </div>
+  </div></div>
+  </div>
+</section>
+
+<!-- email en haut, centre, a la hauteur de THE STUDIO : revele par les "//////" a chaque arrivee -->
+<div id="topContact">
+  <div class="tc-row">
+    <a class="top-email" id="topEmail" href="mailto:hello@bygauthier.com">hello@bygauthier.com</a>
+  </div>
+</div>
+
+<!-- LinkedIn + Instagram : en haut a droite, sous SOUND -->
+<div id="topSocial">
+  <!-- LinkedIn : meme trace neon que l'icone Instagram (cadre arrondi + "in" au trait) -->
+  <a class="ig-link" id="linkedinLink" href="https://www.linkedin.com/in/gauthier-matherat-76a3b819b/" target="_blank" rel="noopener noreferrer" aria-label="Gauthier Matherat on LinkedIn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false">
+      <rect x="3" y="3" width="18" height="18" rx="5.5"/>
+      <path d="M8.2 10.6v5.9"/>
+      <circle cx="8.2" cy="7.7" r="1" fill="currentColor" stroke="none"/>
+      <path d="M11.6 16.5v-5.9M11.6 13.4c0-1.7 1.1-2.9 2.6-2.9s2.4 1.1 2.4 2.9v3.1"/>
+    </svg>
+  </a>
   <a class="ig-link" href="https://www.instagram.com/musicbygauthier/" target="_blank" rel="noopener noreferrer" aria-label="byGauthier on Instagram">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
       <rect x="3" y="3" width="18" height="18" rx="5.5"/>
@@ -538,36 +824,25 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
   </a>
 </div>
 
+<!-- CTA : [ Start a project ] seul, pose sur la dalle d'entree du dome -->
+<div id="ctaWrap">
+  <button id="startProject">[ Start a project ]</button>
+</div>
+
 <!-- Flux "Start a project" : vidéo d'entrée -> photo floutée -> reveal contact -->
 <div id="projectStage">
   <!-- 22 Mo : la plus lourde des trois videos, et beaucoup de visiteurs ne cliqueront
        jamais sur "Start a project". preload="none" -> ne se telecharge que sur signal
        d'intention (survol/touch du bouton) ou, a defaut, en tache de fond apres coup. -->
-  <video id="slideVideo" muted playsinline preload="none" src="assets/%5BStart%20project%5D%20video%20slide.mp4"></video>
+  <video id="slideVideo" muted playsinline preload="none"></video>
   <div id="domePhoto"></div>
   <div id="contactOverlay">
     <form id="projectForm" novalidate>
-      <div class="pf-heading">Tell me what you're building.</div>
-      <div class="pf-sub">Whether you're launching a luxury hotel, a Web3 platform, a property brand or simply want your business to sound unlike anyone else… Let's create something exclusive.</div>
+      <div class="pf-heading">Tell me what you're building,<span class="pf-heading-accent">and I'll create its sound identity.</span></div>
 
       <div class="pf-field">
         <label class="pf-label" for="pfEmail">Your email</label>
         <input type="email" id="pfEmail" required placeholder="you@company.com">
-      </div>
-
-      <div class="pf-field">
-        <label class="pf-label" for="pfType">I am…</label>
-        <select id="pfType">
-          <option value="" disabled selected>Select one…</option>
-          <option>Luxury Hotel</option>
-          <option>Real Estate</option>
-          <option>Web3</option>
-          <option>Hospitality</option>
-          <option>Agency</option>
-          <option>Creator</option>
-          <option>Startup</option>
-          <option>Other</option>
-        </select>
       </div>
 
       <div class="pf-field">
@@ -610,7 +885,7 @@ body.project-mode #creditsRight { opacity: 0 !important; pointer-events: none; }
 <!-- Act 1 · Loader (igloo-clone) -->
 <section id="loader" class="act" aria-label="Loading">
   <div class="loader-inner">
-    <div class="loader-title" id="loaderTitle">I compose bespoke music and immersive sound design for luxury brands, elite creators and digital experiences that want to be remembered — not just seen.
+    <div class="loader-title" id="loaderTitle">I compose bespoke music and immersive sound design for elite brands that want to be remembered. Not just seen.
 
 Every composition is yours alone, with 100% commercial ownership.</div>
     <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
@@ -638,20 +913,19 @@ const loaderFill = document.getElementById('loaderFill');
 const loaderPct = document.getElementById('loaderPct');
 
 /* ---- sons (assets fournis par l'user) ----
-   cache-bust systématique : ces fichiers sont régulièrement remplacés (même nom,
-   nouveau contenu) pendant les révisions, et un navigateur qui a déjà visité la page
-   peut resservir l'ancienne version depuis son cache HTTP sans jamais retélécharger
-   la nouvelle. Le "?v=" (horodatage du chargement) force un fetch réseau à chaque
-   ouverture de page, donc chaque nouvel export est bien celui qui est joué. */
-const ASSET_BUST = Date.now();
-const audioAsset = (name) => new Audio('assets/' + encodeURIComponent(name) + '?v=' + ASSET_BUST);
+   Version fixe dans l'URL : le navigateur garde les sons en cache d'une visite a l'autre
+   (avant, un horodatage les faisait retelecharger a chaque ouverture). Apres un nouvel
+   export d'un son, augmenter AUDIO_VERSION suffit a forcer le rechargement chez tout le monde.
+   Les deux boucles musicales sont en AAC 160 kbit/s (assets/audio/), deux fois plus legeres. */
+const AUDIO_VERSION = '2';
+const audioAsset = (path) => new Audio('assets/' + path + '?v=' + AUDIO_VERSION);
 
-const sfx100 = audioAsset('100pct sound.m4a');
-const sfxEnter = audioAsset('enter button.m4a');
-const loopMain = audioAsset('Loop music main 2 .mp3');
+const sfx100 = audioAsset('100pct%20sound.m4a');
+const sfxEnter = audioAsset('enter%20button.m4a');
+const loopMain = audioAsset('audio/loop-main.m4a');
 loopMain.loop = true;
-const effectSlide = audioAsset('Effect sliding dome .mp3');
-const musicDome = audioAsset('Music in dome .mp3');
+const effectSlide = audioAsset('audio/effect-slide.m4a');
+const musicDome = audioAsset('audio/music-dome.m4a');
 musicDome.loop = true;
 
 /* la barre de 100% n'est pas dans un handler de clic (elle finit toute seule) :
@@ -896,8 +1170,130 @@ setInterval(() => {
   slides[reviewIndex].classList.add('is-on');
 }, 4000);
 
+/* ---- ON AIR : le bandeau est en HTML, fige ; il glisse juste depuis le bas apres Enter ---- */
+function revealOnAir() {
+  document.getElementById('onAir').classList.add('is-on');
+}
+
+/* ---- cadrage du film : convertit un point de l'image (fractions du cadre 3852x2152) en
+   coordonnees ecran, selon object-fit:cover centre de #hero video. Mesure sur des images
+   du film : dalle d'entree du dome ~ (49,5 %, 75,5 %).
+   La camera bouge a peine pendant la boucle, donc un point fixe suffit. */
+const FILM = { w: 3852, h: 2152 };
+const DOME_SLAB = [0.495, 0.755];
+function filmToScreen([fx, fy]) {
+  const s = Math.max(innerWidth / FILM.w, innerHeight / FILM.h);
+  return [(innerWidth - FILM.w * s) / 2 + fx * FILM.w * s, (innerHeight - FILM.h * s) / 2 + fy * FILM.h * s];
+}
+function overlaps(a, b) { return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top; }
+
+/* ---- bandeau mobile : une copie du jeu de credits pour boucler le defilement ---- */
+const obTrack = document.getElementById('obTrack');
+const obLoop = obTrack.firstElementChild.cloneNode(true);
+obLoop.classList.add('ob-set--loop');
+obLoop.setAttribute('aria-hidden', 'true');
+obTrack.appendChild(obLoop);
+function tuneOnAirSpeed() {
+  // vitesse de lecture constante (~38 px/s) quelle que soit la largeur du jeu
+  obTrack.style.animationDuration = Math.max(20, Math.round(obTrack.scrollWidth / 2 / 38)) + 's';
+}
+
+const ctaWrap = document.getElementById('ctaWrap');
+const topContact = document.getElementById('topContact');
+
+function layoutDomeAnchors() {
+  // [ Start a project ] pose sur la dalle d'entree. S'il tombe sur une box ou sur le bandeau
+  // (en mobile les boxes couvrent l'entree), il reprend sa place en bas, au-dessus du bandeau.
+  const [slabX, slabY] = filmToScreen(DOME_SLAB);
+  ctaWrap.classList.add('is-pinned');
+  ctaWrap.style.left = slabX + 'px';
+  ctaWrap.style.top = slabY + 'px';
+  const cta = ctaWrap.getBoundingClientRect();
+  const bandTop = innerHeight - document.getElementById('onAir').offsetHeight;
+  const blocked = cta.bottom > bandTop - 10 ||
+    ['creditsLeft', 'creditsRight'].some((id) => overlaps(cta, document.getElementById(id).getBoundingClientRect()));
+  if (blocked) {
+    ctaWrap.classList.remove('is-pinned');
+    ctaWrap.style.left = '';
+    ctaWrap.style.top = '';
+  }
+
+  // email : en haut, centre sur la page, a la hauteur de "////// THE STUDIO". S'il touche
+  // le HUD (petits ecrans), il passe centre juste sous le HUD.
+  const tag = document.querySelector('.hud-tr .tag').getBoundingClientRect();
+  const hudLeft = document.querySelector('.hud-tl').getBoundingClientRect();
+  const w = topContact.offsetWidth;
+  const h = topContact.offsetHeight;
+  const x = innerWidth / 2;
+  let y = tag.top + tag.height / 2;
+  const box = { left: x - w / 2 - 14, right: x + w / 2 + 14, top: y - h / 2, bottom: y + h / 2 };
+  if (overlaps(box, tag) || overlaps(box, hudLeft)) {
+    y = Math.max(hudLeft.bottom, document.getElementById('topSocial').getBoundingClientRect().bottom) + 18 + h / 2;
+  }
+  topContact.style.left = x + 'px';
+  topContact.style.top = y + 'px';
+
+  tuneOnAirSpeed();
+}
+let layoutRaf = 0;
+addEventListener('resize', () => { cancelAnimationFrame(layoutRaf); layoutRaf = requestAnimationFrame(layoutDomeAnchors); });
+layoutDomeAnchors();
+if (document.fonts) document.fonts.ready.then(layoutDomeAnchors);
+
+/* ---- contact : les "//////" de THE STUDIO glissent jusqu'a l'email, le balaient de droite a
+   gauche (il se decode dans leur sillage) puis reviennent ; LinkedIn et Instagram s'allument
+   ensuite sous SOUND en gresillant comme un neon. ---- */
+const topRow = topContact.querySelector('.tc-row');
+const topEmail = document.getElementById('topEmail');
+const tagSlashes = document.getElementById('tagSlashes');
+const topSocial = document.getElementById('topSocial');
+function revealTopContact() {
+  layoutDomeAnchors();
+  topContact.classList.add('is-visible');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !tagSlashes.animate) {
+    topContact.classList.add('is-revealed');
+    topSocial.classList.add('is-visible');
+    return;
+  }
+  const s = tagSlashes.getBoundingClientRect();
+  const r = topRow.getBoundingClientRect();
+  const dy = (r.top + r.height / 2) - (s.top + s.height / 2);
+  const dxRight = r.right - s.right;
+  const dxLeft = r.left - s.left;
+  const D = 3000;
+  const ease = 'cubic-bezier(0.65, 0, 0.35, 1)';
+  const white = '0 0 6px #fff, 0 0 16px rgba(255,255,255,0.6)';
+  const hot = '0 0 6px #ffb066, 0 0 16px #ff8a3d, 0 0 30px rgba(255,122,42,0.7)';
+  tagSlashes.animate([
+    { transform: 'translate(0, 0)', color: '#fff', textShadow: white, easing: ease },
+    { transform: `translate(${dxRight}px, ${dy}px)`, color: '#ffb066', textShadow: hot, offset: 0.24, easing: ease },
+    { transform: `translate(${dxLeft}px, ${dy}px)`, color: '#ffb066', textShadow: hot, offset: 0.64, easing: ease },
+    { transform: 'translate(0, 0)', color: '#fff', textShadow: white },
+  ], { duration: D });
+  const sweep = topRow.animate(
+    [{ clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0)' }],
+    { delay: D * 0.24, duration: D * 0.4, easing: ease, fill: 'both' });
+  setTimeout(() => scrambleReveal(topEmail, topEmail.textContent, { duration: 1300 }), D * 0.24);
+  sweep.finished.then(() => { topContact.classList.add('is-revealed'); sweep.cancel(); }).catch(() => {});
+
+  // les icones s'allument quand les slashes reviennent a leur place
+  setTimeout(() => {
+    topSocial.classList.add('is-visible');
+    [...topSocial.children].forEach((icon, i) => icon.animate([
+      { opacity: 0, transform: 'scale(0.6)' },
+      { opacity: 1, transform: 'scale(1.15)', offset: 0.3 },
+      { opacity: 0.25, offset: 0.45 },
+      { opacity: 1, transform: 'scale(1)', offset: 0.6 },
+      { opacity: 0.55, offset: 0.74 },
+      { opacity: 1, transform: 'scale(1)' },
+    ], { delay: i * 170, duration: 760, easing: 'ease-out', fill: 'backwards' }));
+  }, D * 0.7);
+}
+
 /* ---- Act 2 -> Act 3 ---- */
 document.getElementById('enter').addEventListener('click', () => {
+  setTimeout(revealOnAir, 900);
+  setTimeout(revealTopContact, 1900);
   gateEl.classList.remove('is-on');
   gateEl.classList.add('is-gone');
   runEnterShader(1000);
@@ -914,16 +1310,16 @@ document.getElementById('enter').addEventListener('click', () => {
   // maintenant, il a toute la duree du premier passage de vA pour arriver a temps.
   vB.preload = 'auto';
   vB.load();
-  // filet pour les visiteurs qui ne survolent/touchent jamais le bouton "Start a project" :
-  // on precharge quand meme la video du studio, mais seulement apres coup et donc sans
-  // jamais retarder ce qui compte pour le premier affichage.
-  setTimeout(preloadSlideVideo, 5000);
+  // la video "Start a project" ne se charge plus d'office : seulement au survol / toucher
+  // du bouton (preloadSlideVideo), pour ne rien couter aux visiteurs qui ne cliquent pas.
 });
 
 /* ---- CTA "Start a project" : on entre dans le studio (vidéo) -> photo floutée -> contact ---- */
 const startBtn = document.getElementById('startProject');
 const projectStage = document.getElementById('projectStage');
 const slideVideo = document.getElementById('slideVideo');
+// meme taille que le film du dome ; preload=none : rien ne part avant le survol / toucher
+if (!window.BYG_VIDEO.off) slideVideo.src = 'assets/video/slide-' + window.BYG_VIDEO.tier + '.mp4';
 const domePhoto = document.getElementById('domePhoto');
 const contactOverlay = document.getElementById('contactOverlay');
 const closeContact = document.getElementById('closeContact');
@@ -956,10 +1352,18 @@ startBtn.addEventListener('click', () => {
   domePhoto.classList.remove('is-on');
   contactOverlay.classList.remove('is-on');
   projectStage.classList.add('is-on');
+  // pas de video (donnees economisees / 2G) : on passe directement a la photo + formulaire
+  if (window.BYG_VIDEO.off || slideVideo.error) { showContactStage(); return; }
   slideVideo.currentTime = 0;
   const p = slideVideo.play();
   if (p && p.catch) p.catch(() => setTimeout(() => slideVideo.play().catch(() => {}), 60));
+  // filet connexion faible : la video dure 6s ; si elle n'est pas finie a 9s, on n'attend plus
+  clearTimeout(contactStageTimer);
+  contactStageTimer = setTimeout(() => {
+    if (document.body.classList.contains('project-mode') && !contactOverlay.classList.contains('is-on')) showContactStage();
+  }, 9000);
 });
+let contactStageTimer = 0;
 
 // dès que l'effet d'entrée est fini -> "Music in dome" en boucle tant qu'on est dans le dôme
 effectSlide.addEventListener('ended', () => {
@@ -969,14 +1373,18 @@ effectSlide.addEventListener('ended', () => {
 });
 
 // à la fin de la vidéo : photo du dôme floutée en fond, puis reveal du contact
-slideVideo.addEventListener('ended', () => {
+function showContactStage() {
+  clearTimeout(contactStageTimer);
+  slideVideo.pause();
   slideVideo.classList.add('is-hidden');
   domePhoto.classList.add('is-on');
   setTimeout(() => contactOverlay.classList.add('is-on'), 550);
-});
+}
+slideVideo.addEventListener('ended', showContactStage);
 
 // close : retour à la page principale + la musique principale reprend
 closeContact.addEventListener('click', () => {
+  clearTimeout(contactStageTimer);
   contactOverlay.classList.remove('is-on');
   projectStage.classList.remove('is-on');   // fade out de la scène -> révèle le hero dessous
   document.body.classList.remove('project-mode'); // les textes reviennent
@@ -1001,26 +1409,13 @@ closeContact.addEventListener('click', () => {
   }, 700);
 });
 
-/* ---- formulaire : placeholder qui tourne toutes les 5s + envoi automatique ---- */
+/* ---- formulaire : envoi automatique ---- */
 const pfEmail = document.getElementById('pfEmail');
 const pfMessage = document.getElementById('pfMessage');
-const pfType = document.getElementById('pfType');
 const pfSend = document.getElementById('pfSend');
 const pfStatus = document.getElementById('pfStatus');
 const pfSuccess = document.getElementById('pfSuccess');
 const projectForm = document.getElementById('projectForm');
-const PLACEHOLDERS = [
-  "We're opening a boutique hotel in Dubai and need a signature sound for the guest journey…",
-  "I publish luxury property reels every day and I'm looking for original commercial-quality music.",
-  "I want my website to sound unique.",
-];
-let phIndex = 0;
-pfMessage.placeholder = PLACEHOLDERS[0];
-setInterval(() => {
-  phIndex = (phIndex + 1) % PLACEHOLDERS.length;
-  pfMessage.placeholder = PLACEHOLDERS[phIndex];
-}, 5000);
-
 /* le formulaire poste directement vers hello@bygauthier.com via Formspree :
    le site est 100% statique (GitHub Pages), donc aucun serveur ici ne peut
    envoyer un mail lui-même — Formspree fait ce relais. Le mailto: visible sous
@@ -1034,7 +1429,6 @@ projectForm.addEventListener('submit', async (e) => {
   pfStatus.textContent = 'Sending…';
   pfSend.disabled = true;
 
-  const who = pfType.value || 'Someone';
   const msg = pfMessage.value.trim();
 
   try {
@@ -1043,9 +1437,8 @@ projectForm.addEventListener('submit', async (e) => {
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: pfEmail.value.trim(),
-        type: who,
         message: msg,
-        _subject: `New project — ${who}`,
+        _subject: 'New project brief — bygauthier.com',
       }),
     });
 
