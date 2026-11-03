@@ -619,8 +619,9 @@ body.project-mode #onAir { opacity: 0 !important; pointer-events: none; }
 .top-email:hover { color: #fff; border-color: var(--neon-hot); text-shadow: 0 0 10px rgba(255,176,102,0.8); }
 
 /* ---- LinkedIn + Instagram : en haut a droite, sous SOUND, en plus grand ---- */
+#muteToggle { display: none !important; } /* plus de son pour l'instant : voir NO_SOUND */
 #topSocial {
-  position: fixed; top: calc(var(--space-lg) + 4.3rem); right: var(--space-lg); z-index: 30;
+  position: fixed; top: calc(var(--space-lg) + 2.5rem); right: var(--space-lg); z-index: 30;
   display: flex; align-items: center; gap: 1rem;
   opacity: 0; visibility: hidden; transition: opacity 400ms var(--ease-in-out), visibility 0s linear 400ms;
 }
@@ -644,8 +645,6 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
 
 @media (max-width: 760px) {
   .top-email { font-size: 0.6rem; letter-spacing: 0.14em; }
-  /* pas de son sur mobile : plus de switch SOUND, les icones prennent sa place */
-  #muteToggle { display: none !important; }
   #projectForm .pf-heading { padding-right: 0; } /* la marge reservee au switch SOUND (V1) decentrait le titre */
   #topSocial { top: calc(var(--space-md) + 2rem); right: var(--space-md); gap: 0.85rem; }
   #topSocial .ig-link svg { width: 22px; height: 22px; }
@@ -978,9 +977,10 @@ muteToggle.addEventListener('click', () => {
   applyMute();
 });
 
-/* ---- mobile : pas de son du tout (choix de Gauthier). Meme seuil que la mise en page mobile.
-   Les sons ne sont meme pas telecharges : play() devient un no-op, plus de source. ---- */
-const NO_SOUND = matchMedia('(max-width: 760px)').matches;
+/* ---- son coupe partout pour l'instant (choix de Gauthier, nov. 2026 : genant sur iPad/mobile,
+   risque d'agacer). Les sons ne sont meme pas telecharges : play() devient un no-op, plus de
+   source. Pour le remettre : NO_SOUND = false, et retirer la regle #muteToggle {display:none}. ---- */
+const NO_SOUND = true;
 if (NO_SOUND) {
   soundOn = false;
   allAudio.forEach((a) => {
