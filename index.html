@@ -646,6 +646,7 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
   .top-email { font-size: 0.6rem; letter-spacing: 0.14em; }
   /* pas de son sur mobile : plus de switch SOUND, les icones prennent sa place */
   #muteToggle { display: none !important; }
+  #projectForm .pf-heading { padding-right: 0; } /* la marge reservee au switch SOUND (V1) decentrait le titre */
   #topSocial { top: calc(var(--space-md) + 2rem); right: var(--space-md); gap: 0.85rem; }
   #topSocial .ig-link svg { width: 22px; height: 22px; }
   #projectForm .pf-heading-accent { font-size: 0.5em; letter-spacing: 0.16em; }
@@ -698,15 +699,16 @@ body.project-mode #topContact a, body.project-mode #topSocial a { pointer-events
 <script>
 /* Taille de video selon l'ecran et la connexion (les 4K d'origine ne sont plus chargees) :
    hauteur de film reellement affichee = cadrage object-fit:cover x densite de pixels (max 2),
-   puis la plus petite version qui suffit : 720p / 1080p / 1440p. Mobile : 1080p max.
+   puis la plus petite version qui suffit : 720p / 1080p / 1440p / 2160p (4K).
+   Telephone : 1440p max (ecran Retina, mais petit).
    3G : 720p max. Economiseur de donnees ou 2G : pas de video, l'image fixe du dome reste. */
 (function () {
   var c = navigator.connection || {};
   var type = c.effectiveType || '';
   var off = c.saveData === true || /2g/.test(type);
   var need = Math.max(innerWidth / 3852, innerHeight / 2152) * 2152 * Math.min(window.devicePixelRatio || 1, 2);
-  var tier = need <= 760 ? 720 : need <= 1140 ? 1080 : 1440;
-  if (innerWidth <= 760) tier = Math.min(tier, 1080);
+  var tier = need <= 760 ? 720 : need <= 1140 ? 1080 : need <= 1560 ? 1440 : 2160;
+  if (innerWidth <= 760) tier = Math.min(tier, 1440);
   if (/3g/.test(type)) tier = 720;
   window.BYG_VIDEO = { tier: tier, off: off };
   if (off) return;
@@ -1349,7 +1351,7 @@ const startBtn = document.getElementById('startProject');
 const projectStage = document.getElementById('projectStage');
 const slideVideo = document.getElementById('slideVideo');
 // meme taille que le film du dome ; preload=none : rien ne part avant le survol / toucher
-if (!window.BYG_VIDEO.off) slideVideo.src = 'assets/video/slide-' + window.BYG_VIDEO.tier + '.mp4';
+if (!window.BYG_VIDEO.off) slideVideo.src = 'assets/video/slide-' + Math.min(window.BYG_VIDEO.tier, 1440) + '.mp4';
 const domePhoto = document.getElementById('domePhoto');
 const contactOverlay = document.getElementById('contactOverlay');
 const closeContact = document.getElementById('closeContact');
